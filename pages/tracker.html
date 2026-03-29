@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practice Planner - Cadent</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%230f3a5b'/%3E%3Ctext x='50' y='58' text-anchor='middle' font-size='60' font-family='Arial, Helvetica, sans-serif' fill='%23a5f8ff'%3EC%3C/text%3E%3C/svg%3E" type="image/svg+xml">
+    <link rel="stylesheet" href="../styles/style.css">
+    <script>
+        window.pageTitle = "Practice Planner";
+        window.pageSubtitle = "Plan your practice sessions and track your progress.";
+    </script>
+    <script src="../components/navbar/navbar.js"></script>
+    <script src="../components/header/header.js"></script>
+</head>
+<body>
+    <div class="content">
+        <main>
+            <section id="planner-overview" class="metronome-controls">
+                <h2>Practice Planner</h2>
+                <p>Create a practice plan for your session and check off items as you complete them.</p>
+
+                <form id="planner-form" class="tracker-form">
+                    <div class="form-row">
+                        <label for="practice-item">Practice Item</label>
+                        <input type="text" id="practice-item" placeholder="e.g., C Major Scale, Fingerstyle Exercise 3..." required>
+                    </div>
+                    <div class="form-row">
+                        <label for="practice-category">Category</label>
+                        <select id="practice-category" required>
+                            <option value="">Select category...</option>
+                            <option value="scales">Scales & Arpeggios</option>
+                            <option value="technique">Technique</option>
+                            <option value="repertoire">Repertoire</option>
+                            <option value="theory">Music Theory</option>
+                            <option value="ear-training">Ear Training</option>
+                            <option value="sight-reading">Sight Reading</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label for="practice-duration">Estimated Time (minutes)</label>
+                        <input type="number" id="practice-duration" min="1" max="120" step="1" placeholder="15">
+                    </div>
+                    <button type="submit" id="add-item">Add to Plan</button>
+                    <button type="button" id="clear-completed">Clear Completed</button>
+                    <button type="button" id="clear-all">Clear All</button>
+                </form>
+
+                <div id="planner-summary" class="tracker-summary">
+                    <h3>Session Progress</h3>
+                    <p>Total Items: <span id="summary-total">0</span></p>
+                    <p>Completed: <span id="summary-completed">0</span></p>
+                    <p>Remaining: <span id="summary-remaining">0</span></p>
+                    <p>Total Time: <span id="summary-time">0</span> minutes</p>
+                </div>
+
+                <section id="practice-list" class="note-cards">
+                    <h3>Practice Plan</h3>
+                    <div id="practice-items" class="practice-items"></div>
+                    <button type="button" id="start-session" class="start-session-btn">Start Practice Session</button>
+                    <button type="button" id="end-session" class="end-session-btn" style="display: none;">End Session</button>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <!-- Session Confirmation Modal -->
+    <div id="session-modal" class="session-modal" style="display: none;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <h2>Confirm Practice Session</h2>
+            <p class="modal-subtitle">Review your practice plan before starting</p>
+            
+            <div id="modal-items-list" class="modal-items-list">
+                <!-- Items will be inserted here by JavaScript -->
+            </div>
+            
+            <div class="modal-summary">
+                <p><strong>Total Duration:</strong> <span id="modal-total-time">0</span> minutes</p>
+            </div>
+            
+            <div class="modal-actions">
+                <button id="modal-back" class="modal-btn modal-btn-back">Back</button>
+                <button id="modal-confirm" class="modal-btn modal-btn-confirm">Start Session</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../scripts/tracker.js"></script>
+</body>
+</html>

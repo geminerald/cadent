@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fretboard Practice - Cadent</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%230f3a5b'/%3E%3Ctext x='50' y='58' text-anchor='middle' font-size='60' font-family='Arial, Helvetica, sans-serif' fill='%23a5f8ff'%3EC%3C/text%3E%3C/svg%3E" type="image/svg+xml">
+    <link rel="stylesheet" href="../styles/style.css">
+    <script>
+        window.pageTitle = "Fretboard Memory Trainer";
+        window.pageSubtitle = "Practice guitar fretboard notes and patterns with guided drills.";
+    </script>
+    <script src="../components/navbar/navbar.js"></script>
+    <script src="../components/header/header.js"></script>
+</head>
+<body>
+    <div class="content">
+        <main>
+            <section id="fretboard-overview">
+                <h2>Fretboard Learning</h2>
+                <p>Learn the notes on the guitar fretboard quickly by practicing position-based drills. Start with open strings, then move to key frets and octaves.</p>
+            </section>
+            <section id="fretboard-tools">
+                <h2>Practice Tools</h2>
+                <div class="feature-grid">
+                    <div class="feature">
+                        <h3>Random Note Drill</h3>
+                        <p>Show a random fret and string to identify and name the note.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>Scale Position Drill</h3>
+                        <p>Practice scale patterns across fretboard positions and string sets.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>Chord Shape Drill</h3>
+                        <p>Test chord-shape memorization over different barre and open forms.</p>
+                    </div>
+                </div>
+            </section>
+            <section id="fretboard-drill">
+                <h2>Fretboard Note Recognition</h2>
+                <div class="metronome-controls">
+                    <p>Listen to your guitar and play the target note displayed below; correct answers will mark as done.</p>
+                    <div class="note-cards">
+                    <div class="note-card">
+                        <div class="note-label">Target Note</div>
+                        <div class="note-value" id="target-note">--</div>
+                    </div>
+                    <div class="note-card">
+                        <div class="note-label">Detected Note</div>
+                        <div class="note-value" id="detected-note">--</div>
+                    </div>
+                </div>
+                <div class="drill-status" id="feedback" style="color: #fbcf38;">Press start and play the note!</div>
+                    <div class="drill-controls">
+                        <button id="start-drill">Start Drill</button>
+                        <button id="pause-drill" disabled>Pause Drill</button>
+                        <button id="reset-drill">Reset Drill</button>
+                    </div>
+                    <div class="progress-items">
+                        <h3>Progress</h3>
+                        <div id="progress-checkboxes" class="progress-checkboxes">
+                            <label><input type="checkbox" disabled><span>1</span></label>
+                            <label><input type="checkbox" disabled><span>2</span></label>
+                            <label><input type="checkbox" disabled><span>3</span></label>
+                            <label><input type="checkbox" disabled><span>4</span></label>
+                            <label><input type="checkbox" disabled><span>5</span></label>
+                        </div>
+                        <p id="drill-time">Time: 0.00s</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <footer>
+            <p>&copy; 2026 Cadent. All rights reserved.</p>
+        </footer>
+    </div>
+    <script src="../scripts/fretboard.js"></script>
+</body>
+</html>

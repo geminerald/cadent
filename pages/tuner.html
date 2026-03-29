@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuner - Cadent</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%230f3a5b'/%3E%3Ctext x='50' y='58' text-anchor='middle' font-size='60' font-family='Arial, Helvetica, sans-serif' fill='%23a5f8ff'%3EC%3C/text%3E%3C/svg%3E" type="image/svg+xml">
+    <link rel="stylesheet" href="../styles/style.css">
+    <script>
+        window.pageTitle = "Instrument Tuner";
+        window.pageSubtitle = "Use your microphone to tune your instrument with real-time frequency feedback.";
+    </script>
+    <script src="../components/navbar/navbar.js"></script>
+    <script src="../components/header/header.js"></script>
+</head>
+<body>
+    <div class="content">
+        <main>
+            <section id="tuner-overview">
+                <h2>Tuner Tool</h2>
+                <p>Tap Start, play a string, and watch the pitch display. Use the visual needle to find the closest note.</p>
+            </section>
+            <section id="tuner-controls" class="metronome-controls">
+                <div class="note-cards">
+                    <div class="note-card">
+                        <div class="note-label">Detected Pitch</div>
+                        <div class="note-value" id="tuner-note">--</div>
+                    </div>
+                    <div class="note-card">
+                        <div class="note-label">Cents Offset</div>
+                        <div class="note-value" id="tuner-cents">--</div>
+                    </div>
+                </div>
+                <div class="drill-controls">
+                    <button id="tuner-start">Start</button>
+                    <button id="tuner-pause" disabled>Pause</button>
+                    <button id="tuner-reset">Reset</button>
+                </div>
+                <div class="drill-status" id="tuner-feedback">Microphone offline</div>
+                <div class="tuner-meter">
+                    <div id="needle"></div>
+                </div>
+                <div class="drill-status" id="tuner-freq">Frequency: -- Hz</div>
+            </section>
+        </main>
+        <footer>
+            <p>&copy; 2026 Cadent. All rights reserved.</p>
+        </footer>
+    </div>
+    <script src="../scripts/tuner.js"></script>
+</body>
+</html>
