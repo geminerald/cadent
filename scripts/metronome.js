@@ -4,12 +4,13 @@ class Metronome {
     constructor() {
         this.audioContext = null;
         this.isPlaying = false;
-        this.tempo = 120;
+        // Load tempo from localStorage, default to 120
+        this.tempo = this.loadTempo();
         this.beatsPerMeasure = 4;
         this.noteValue = 4;
         this.soundType = 'beep';
-        this.startTempo = 120;
-        this.endTempo = 120;
+        this.startTempo = this.tempo;
+        this.endTempo = this.tempo;
         this.rampDuration = 0; // in minutes
         this.rampStartTime = 0;
         this.currentBeat = 0;
@@ -18,6 +19,24 @@ class Metronome {
 
         this.initAudio();
         this.setupControls();
+        this.initializeControlValues();
+    }
+
+    loadTempo() {
+        const savedTempo = localStorage.getItem('metronome-tempo');
+        return savedTempo ? parseInt(savedTempo) : 120;
+    }
+
+    saveTempo(tempo) {
+        localStorage.setItem('metronome-tempo', tempo);
+    }
+
+    initializeControlValues() {
+        // Set initial values from localStorage
+        document.getElementById('tempo-slider').value = this.tempo;
+        document.getElementById('tempo-number').value = this.tempo;
+        document.getElementById('start-tempo').value = this.tempo;
+        document.getElementById('end-tempo').value = this.tempo;
     }
 
     initAudio() {
@@ -37,10 +56,15 @@ class Metronome {
             const value = parseInt(source.value);
             if (value >= 40 && value <= 200) {
                 this.tempo = value;
+                this.saveTempo(value);
                 tempoSlider.value = value;
                 tempoNumber.value = value;
-                if (this.isPlaying) {
-                    this.restart();
+                // Update advanced options if not ramping
+                if (this.rampDuration <= 0) {
+                    document.getElementById('start-tempo').value = value;
+                    document.getElementById('end-tempo').value = value;
+                    this.startTempo = value;
+                    this.endTempo = value;
                 }
             }
         };
@@ -116,7 +140,11 @@ class Metronome {
         this.currentBeat = 0;
         this.nextNoteTime = this.audioContext.currentTime;
         this.rampStartTime = this.audioContext.currentTime;
-        this.tempo = this.startTempo;
+
+        // If using ramp, use start tempo, otherwise use current tempo
+        if (this.rampDuration > 0) {
+            this.tempo = this.startTempo;
+        }
 
         // Update UI
         document.getElementById('tempo-slider').value = this.tempo;
@@ -158,6 +186,13 @@ class Metronome {
         while (this.nextNoteTime < this.audioContext.currentTime + 0.1) {
             this.playClick(this.currentBeat === 0 ? 'accent' : 'normal');
             this.updateVisualIndicator(this.currentBeat);
+            
+            // Update the displayed tempo if ramping
+            if (this.rampDuration > 0) {
+                document.getElementById('tempo-slider').value = currentTempo;
+                document.getElementById('tempo-number').value = currentTempo;
+            }
+            
             this.nextNoteTime += secondsPerBeat;
             this.currentBeat = (this.currentBeat + 1) % this.beatsPerMeasure;
         }
