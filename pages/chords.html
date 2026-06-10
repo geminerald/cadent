@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chord Player - Cadent</title>
+    <link rel="icon" href="/images/tab-icon.png" type="icon">
+    <link rel="stylesheet" href="../styles/style.css">
+    <script>
+        window.pageTitle = "Chord Player";
+        window.pageSubtitle = "Build a chord progression and loop it as a backing track.";
+    </script>
+    <script src="../components/navbar/navbar.js"></script>
+    <script src="../components/header/header.js"></script>
+</head>
+<body>
+
+    <!-- Count-in overlay -->
+    <div id="countdown-overlay" class="countdown-overlay">
+        <div id="countdown-number" class="countdown-number">4</div>
+    </div>
+
+    <div class="content">
+        <main>
+
+            <!-- ── Chord Builder ─────────────────────────────────────── -->
+            <section id="chord-player">
+                <h2>Backing Track Builder</h2>
+                <p>Add chords to build a progression, then hit Play to loop it in time.</p>
+
+                <div class="metronome-controls">
+
+                    <!-- Tempo · Sound · Beats per line -->
+                    <div class="chord-top-row">
+                        <div class="tempo-control">
+                            <label>Tempo (BPM)</label>
+                            <div>
+                                <input type="range" id="bpm-slider" min="40" max="200" value="120" step="1">
+                                <input type="number" id="bpm-number" min="40" max="200" value="120" step="1">
+                            </div>
+                        </div>
+                        <div class="chord-settings-col">
+                            <div class="sound-control">
+                                <label for="sound-type">Sound</label>
+                                <select id="sound-type">
+                                    <option value="keys" selected>Keys</option>
+                                    <option value="pad">Pad</option>
+                                    <option value="organ">Organ</option>
+                                </select>
+                            </div>
+                            <div class="bpl-control">
+                                <label for="beats-per-line">Beats / line</label>
+                                <input type="number" id="beats-per-line" min="4" max="64" value="16" step="4">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add chord form -->
+                    <div class="chord-adder">
+                        <div class="chord-adder-selects">
+                            <div class="chord-adder-field">
+                                <label for="chord-root">Root</label>
+                                <select id="chord-root">
+                                    <option>C</option><option>C#</option>
+                                    <option>D</option><option>D#</option>
+                                    <option>E</option><option>F</option>
+                                    <option>F#</option><option>G</option>
+                                    <option>G#</option><option>A</option>
+                                    <option>A#</option><option>B</option>
+                                </select>
+                            </div>
+                            <div class="chord-adder-field">
+                                <label for="chord-type">Type</label>
+                                <select id="chord-type">
+                                    <optgroup label="Triads">
+                                        <option value="maj">Major</option>
+                                        <option value="min">Minor</option>
+                                        <option value="dim">Dim</option>
+                                        <option value="aug">Aug</option>
+                                    </optgroup>
+                                    <optgroup label="Sevenths">
+                                        <option value="7">Dom 7</option>
+                                        <option value="maj7">Maj 7</option>
+                                        <option value="min7">Min 7</option>
+                                        <option value="m7b5">Half Dim</option>
+                                    </optgroup>
+                                    <optgroup label="Sus / Add">
+                                        <option value="sus2">Sus 2</option>
+                                        <option value="sus4">Sus 4</option>
+                                        <option value="add9">Add 9</option>
+                                        <option value="add11">Add 11</option>
+                                        <option value="madd9">m(add9)</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="chord-adder-field">
+                                <label for="chord-beats">Beats</label>
+                                <select id="chord-beats">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="4" selected>4</option>
+                                    <option value="8">8</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button id="add-chord-btn">+ Add Chord</button>
+                    </div>
+
+                    <!-- Progression display (rendered by JS) -->
+                    <div id="progression-area">
+                        <p class="empty-state" id="empty-message">No chords yet — add some above to build your progression.</p>
+                        <div id="chord-progression"></div>
+                    </div>
+
+                    <!-- Multi-select actions (shown when ≥1 chord selected) -->
+                    <div id="selection-actions" class="selection-actions" style="display:none;">
+                        <span id="selection-count">0 selected</span>
+                        <button id="duplicate-selected-btn">⧉ Duplicate Selection</button>
+                        <button id="clear-selection-btn">✕ Deselect All</button>
+                    </div>
+
+                    <!-- Playback controls -->
+                    <div class="playback-controls">
+                        <button id="play-btn">▶ Play</button>
+                        <button id="stop-btn" disabled>■ Stop</button>
+                        <button id="clear-btn">Clear All</button>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ── Drum Machine ──────────────────────────────────────── -->
+            <section id="drum-machine">
+                <h2>Drum Machine <button id="drum-toggle" class="section-toggle" title="Toggle drum machine">▾</button></h2>
+
+                <div id="drum-body">
+                <div class="metronome-controls">
+
+                    <div class="drum-header">
+                        <div class="drum-volume-row">
+                            <label for="drum-volume">Volume</label>
+                            <input type="range" id="drum-volume" min="0" max="100" value="70" step="1">
+                            <span id="drum-volume-display">70%</span>
+                        </div>
+                        <div class="drum-presets-row">
+                            <span class="preset-row-label">Presets:</span>
+                            <button class="drum-preset-btn" data-preset="rock">Rock</button>
+                            <button class="drum-preset-btn" data-preset="funk">Funk</button>
+                            <button class="drum-preset-btn" data-preset="house">House</button>
+                            <button class="drum-preset-btn" data-preset="clear">Clear</button>
+                        </div>
+                    </div>
+
+                    <!-- Step grid + playhead, built by JS -->
+                    <div id="drum-grid-wrap">
+                        <div id="drum-grid" class="drum-grid"></div>
+                        <div id="drum-playhead"></div>
+                    </div>
+
+                </div>
+                </div>
+            </section>
+
+        </main>
+        <footer>
+            <p>&copy; 2026 Cadent. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="../scripts/chords.js"></script>
+</body>
+</html>

@@ -156,7 +156,7 @@ class Metronome {
     stop() {
         this.isPlaying = false;
         if (this.intervalId) {
-            clearInterval(this.intervalId);
+            clearTimeout(this.intervalId);
             this.intervalId = null;
         }
         this.updateVisualIndicator(-1);

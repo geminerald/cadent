@@ -19,7 +19,8 @@ const state = {
     startTime: null,
     elapsedTime: 0,
     timerInterval: null,
-    rafId: null
+    rafId: null,
+    solved: new Set()
 };
 
 function noteNameFromIndex(index) {
@@ -201,7 +202,7 @@ function processAudio() {
 
                     // card animation on success
                     const targetCard = document.querySelector('.note-card:nth-child(1)');
-                    const checkboxInput = document.querySelector(`#progress-checkboxes input:nth-child(${state.stepIndex})`);
+                    const checkboxInput = document.querySelector(`#progress-checkboxes label:nth-child(${state.stepIndex}) input`);
                     if (targetCard) {
                         targetCard.classList.add('explode');
                         setTimeout(() => targetCard.classList.remove('explode'), 500);
@@ -214,8 +215,8 @@ function processAudio() {
                     if (state.stepIndex >= state.maxSteps) {
                         state.currentTarget = null;
                         markDrillComplete();
-                        stopDrill();
                         const finalTime = ((performance.now() - state.startTime) / 1000).toFixed(2);
+                        stopDrill();
                         setFeedback(`Success! completed in ${finalTime}s`, true);
                         return;
                     }

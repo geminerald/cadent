@@ -293,6 +293,7 @@ function getCurrentItem() {
 }
 
 function updateCurrentRoutine() {
+    if (!currentRoutine) return;
     const items = loadPracticeItems();
     const currentItem = getCurrentItem();
 
@@ -522,11 +523,11 @@ function initializeSession() {
         if (sessionState.startTime) {
             sessionStartTime = sessionState.startTime;
             if (sessionState.isTimerRunning) {
-                startTimer();
+                if (timerToggle) startTimer();
             } else {
                 // Timer was paused, update display but don't start
-                sessionTimer.textContent = formatTime(sessionElapsedTime);
-                timerToggle.textContent = 'Resume';
+                if (sessionTimer) sessionTimer.textContent = formatTime(sessionElapsedTime);
+                if (timerToggle) timerToggle.textContent = 'Resume';
             }
         }
 
