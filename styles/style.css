@@ -425,32 +425,127 @@ button:active {
     color: #a8fdef;
 }
 
+.ramp-enable {
+    grid-column: 1 / -1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    color: #b0f8d9;
+    cursor: pointer;
+}
+
+.ramp-enable input {
+    width: 16px;
+    height: 16px;
+    accent-color: #4fffdb;
+}
+
+.ramp-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+/* Subdivision + swing */
+.subdivision-control {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.8rem;
+}
+
+.subdivision-control select {
+    width: 100%;
+    background: rgba(5, 9, 14, 0.85);
+    color: #ccffe5;
+    border: 1px solid rgba(106, 247, 188, 0.35);
+    border-radius: 6px;
+    padding: 0.45rem;
+}
+
+.swing-toggle {
+    grid-column: 1 / -1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #b0f8d9;
+    cursor: pointer;
+}
+
+.swing-toggle input {
+    width: 16px;
+    height: 16px;
+    accent-color: #4fffdb;
+}
+
+.swing-toggle:has(input:disabled) {
+    opacity: 0.45;
+    cursor: default;
+}
+
+/* Metronome volume */
+.volume-control {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.8rem;
+}
+
+.volume-control input[type="range"] {
+    width: 100%;
+    accent-color: #4fffdb;
+    cursor: pointer;
+}
+
+.volume-control span {
+    color: #98ffdb;
+    min-width: 3em;
+    text-align: right;
+}
+
 .visual-indicator {
     display: flex;
     justify-content: center;
     margin: 1.5rem 0;
 }
 
-#beat-indicator {
-    width: 100px;
-    height: 100px;
+.beat-dots {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.8rem;
+    min-height: 38px;
+}
+
+.beat-dot {
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     background: rgba(13, 18, 25, 0.9);
-    border: 4px solid rgba(112, 255, 190, 0.45);
-    box-shadow: 0 0 30px rgba(36, 137, 118, 0.3);
-    transition: all 0.1s;
+    border: 3px solid rgba(112, 255, 190, 0.45);
+    box-shadow: 0 0 12px rgba(36, 137, 118, 0.25);
+    transition: all 0.08s ease;
 }
 
-#beat-indicator.accent {
-    background-color: #00ffd2;
-    border-color: #2dfaaf;
-    box-shadow: 0 0 20px rgba(0, 255, 210, 0.65);
+/* Beat 1 of the bar is always marked out */
+.beat-dot.downbeat {
+    border-color: rgba(0, 255, 210, 0.85);
 }
 
-#beat-indicator.normal {
+.beat-dot.active {
     background-color: #38f9e5;
     border-color: #1ee9c5;
-    box-shadow: 0 0 20px rgba(56, 249, 229, 0.5);
+    box-shadow: 0 0 16px rgba(56, 249, 229, 0.6);
+    transform: scale(1.18);
+}
+
+.beat-dot.active.downbeat {
+    background-color: #00ffd2;
+    border-color: #2dfaaf;
+    box-shadow: 0 0 24px rgba(0, 255, 210, 0.85);
 }
 
 @media (max-width: 768px) {

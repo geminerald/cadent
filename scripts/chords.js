@@ -31,6 +31,49 @@ const SOUND_PRESETS = {
     'organ': { wave: 'triangle', attack: 0.008, decay: 0.04, sustain: 0.95, release: 0.25 },
 };
 
+// ── Sampled instruments (smplr) ───────────────────────────────────────────────
+// Dropdown values prefixed "sf:" are General MIDI soundfont instruments played
+// through the smplr sampler (loaded on demand from CDN, samples streamed).
+// The synth presets above remain as offline fallbacks.
+
+const SMPLR_URL = 'https://unpkg.com/smplr@0.26.0/dist/index.mjs';
+
+let smplrModule = null;      // cached import() promise
+const sfLoading = new Map(); // soundfont name -> load promise
+const sfLoaded  = new Map(); // soundfont name -> ready instrument
+
+function isSoundfont(value) { return value.startsWith('sf:'); }
+function soundfontName(value) { return value.slice(3); }
+
+function loadSmplr() {
+    if (!smplrModule) {
+        smplrModule = import(SMPLR_URL).catch(err => {
+            smplrModule = null;   // allow retry on next attempt
+            throw err;
+        });
+    }
+    return smplrModule;
+}
+
+function loadSoundfont(name) {
+    if (sfLoading.has(name)) return sfLoading.get(name);
+    ensureAudio();
+    const promise = loadSmplr()
+        .then(({ Soundfont }) => {
+            const inst = new Soundfont(audioCtx, { instrument: name, destination: masterGain });
+            return Promise.resolve(inst.ready ?? inst.load).then(() => {
+                sfLoaded.set(name, inst);
+                return inst;
+            });
+        })
+        .catch(err => {
+            sfLoading.delete(name);   // allow retry on next attempt
+            throw err;
+        });
+    sfLoading.set(name, promise);
+    return promise;
+}
+
 // ── Drum machine ──────────────────────────────────────────────────────────────
 
 const DRUM_ROWS = [
@@ -91,12 +134,26 @@ function resizeDrumPattern(newSteps) {
     });
 }
 
-// Playback
+// Playback — context and masterGain persist across sessions (sampled instruments
+// are bound to them and their samples are decoded once); sessionGain/drumGain are
+// recreated each playback so disconnecting them silences scheduled synth audio.
 let audioCtx    = null;
 let masterGain  = null;
+let sessionGain = null;
 let drumGain    = null;
 let isPlaying   = false;
 let schedulerId = null;
+
+function ensureAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = 0.85;
+        masterGain.connect(audioCtx.destination);
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+}
 
 let nextChordTime = 0;
 let playIndex     = 0;
@@ -116,14 +173,16 @@ function chordLabel(root, type) {
     return root + CHORD_TYPES[type].suffix;
 }
 
-// Bass root (octave below) + chord tones from ROOT_BASE
+// Bass root (octave below) + chord tones from ROOT_BASE.
+// Our semitone index has C0 = 0, so MIDI = index + 12.
 function getVoicing(root, type) {
     const rootIdx = ROOT_BASE + NOTE_NAMES.indexOf(root);
-    const voices  = [{ freq: noteFreq(rootIdx - 12), isBass: true }];
-    CHORD_TYPES[type].intervals.forEach(iv =>
-        voices.push({ freq: noteFreq(rootIdx + iv), isBass: false })
-    );
-    return voices;
+    const indices = [rootIdx - 12, ...CHORD_TYPES[type].intervals.map(iv => rootIdx + iv)];
+    return indices.map((idx, i) => ({
+        freq:   noteFreq(idx),
+        midi:   idx + 12,
+        isBass: i === 0,
+    }));
 }
 
 // ── Chord audio ───────────────────────────────────────────────────────────────
@@ -132,7 +191,7 @@ function scheduleNote(freq, isBass, t0, chordDuration, preset) {
     const osc  = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.connect(gain);
-    gain.connect(masterGain);
+    gain.connect(sessionGain);
 
     osc.type          = preset.wave;
     osc.frequency.value = freq;
@@ -159,9 +218,30 @@ function scheduleNote(freq, isBass, t0, chordDuration, preset) {
 }
 
 function scheduleChord(chord, startTime) {
-    const preset    = SOUND_PRESETS[document.getElementById('sound-type').value] || SOUND_PRESETS.keys;
-    const duration  = chord.beats * (60 / bpm);
-    getVoicing(chord.root, chord.type).forEach(({ freq, isBass }) =>
+    const sound    = document.getElementById('sound-type').value;
+    const duration = chord.beats * (60 / bpm);
+    const voices   = getVoicing(chord.root, chord.type);
+
+    if (isSoundfont(sound)) {
+        const inst = sfLoaded.get(soundfontName(sound));
+        if (inst) {
+            voices.forEach(({ midi, isBass }) =>
+                inst.start({
+                    note:     midi,
+                    velocity: isBass ? 100 : 85,
+                    time:     startTime,
+                    duration: duration,
+                })
+            );
+            return duration;
+        }
+        // Not loaded yet (e.g. switched mid-playback) — kick off the load and
+        // fall through to the synth so the loop keeps sounding meanwhile.
+        loadSoundfont(soundfontName(sound)).catch(() => {});
+    }
+
+    const preset = SOUND_PRESETS[sound] || SOUND_PRESETS.keys;
+    voices.forEach(({ freq, isBass }) =>
         scheduleNote(freq, isBass, startTime, duration, preset)
     );
     return duration;
@@ -252,7 +332,7 @@ function scheduleCountdownClick(t, accent) {
     const osc  = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.connect(gain);
-    gain.connect(masterGain);
+    gain.connect(sessionGain);
     osc.type          = 'square';
     osc.frequency.value = accent ? 1200 : 800;
     gain.gain.setValueAtTime(0.12, t);
@@ -353,7 +433,7 @@ function startCountdown() {
 
 // ── Play / Stop ───────────────────────────────────────────────────────────────
 
-function play() {
+async function play() {
     if (progression.length === 0) {
         alert('Add at least one chord before playing.');
         return;
@@ -361,10 +441,31 @@ function play() {
 
     sessionId++;     // invalidates any in-flight countdown/highlight callbacks
 
-    audioCtx   = new (window.AudioContext || window.webkitAudioContext)();
-    masterGain = audioCtx.createGain();
-    masterGain.gain.value = 0.85;
-    masterGain.connect(audioCtx.destination);
+    ensureAudio();
+
+    const playBtn = document.getElementById('play-btn');
+    playBtn.disabled = true;
+
+    // Sampled instrument selected and not yet loaded — fetch before counting in
+    const sound = document.getElementById('sound-type').value;
+    if (isSoundfont(sound) && !sfLoaded.has(soundfontName(sound))) {
+        const sid = sessionId;
+        playBtn.textContent = 'Loading…';
+        try {
+            await loadSoundfont(soundfontName(sound));
+        } catch {
+            playBtn.textContent = '▶ Play';
+            playBtn.disabled = false;
+            alert('Couldn\'t load that instrument (check your connection). The Synth sounds work offline.');
+            return;
+        }
+        playBtn.textContent = '▶ Play';
+        if (sessionId !== sid) return;   // stopped while loading
+    }
+
+    sessionGain = audioCtx.createGain();
+    sessionGain.gain.value = 0.85;
+    sessionGain.connect(audioCtx.destination);
 
     drumGain = audioCtx.createGain();
     drumGain.gain.value = parseFloat(document.getElementById('drum-volume').value) / 100;
@@ -372,7 +473,6 @@ function play() {
 
     activeDrumSteps = getDrumSteps();   // lock step count for this playback session
 
-    document.getElementById('play-btn').disabled = true;
     document.getElementById('stop-btn').disabled = false;
 
     startCountdown();
@@ -385,12 +485,11 @@ function stop() {
     clearTimeout(schedulerId);
     schedulerId = null;
 
-    if (audioCtx) {
-        audioCtx.close().catch(() => {});
-        audioCtx   = null;
-        masterGain = null;
-        drumGain   = null;
-    }
+    // Disconnecting the per-session gains silences everything already scheduled
+    // (synth voices, count-in clicks, drums) without closing the context.
+    if (sessionGain) { sessionGain.disconnect(); sessionGain = null; }
+    if (drumGain)    { drumGain.disconnect();    drumGain    = null; }
+    sfLoaded.forEach(inst => inst.stop());
 
     playIndex = 0;
     drumStep  = 0;
@@ -671,6 +770,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // BPM
     document.getElementById('bpm-slider').addEventListener('input', e => syncBpm(e.target.value));
     document.getElementById('bpm-number').addEventListener('input', e => syncBpm(e.target.value));
+
+    // Sound — restore saved choice, persist changes, preload sampled instruments
+    // on selection so Play doesn't have to wait for the download
+    const soundSel   = document.getElementById('sound-type');
+    const savedSound = localStorage.getItem('chord-sound');
+    if (savedSound && [...soundSel.options].some(o => o.value === savedSound)) {
+        soundSel.value = savedSound;
+    }
+    soundSel.addEventListener('change', () => {
+        localStorage.setItem('chord-sound', soundSel.value);
+        if (isSoundfont(soundSel.value)) {
+            loadSoundfont(soundfontName(soundSel.value)).catch(() => {});
+        }
+    });
 
     // Beats per line — update chord grid AND resize/re-render drum machine
     document.getElementById('beats-per-line').addEventListener('input', () => {
