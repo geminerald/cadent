@@ -12,6 +12,7 @@
     </script>
     <script src="../components/navbar/navbar.js"></script>
     <script src="../components/header/header.js"></script>
+    <script src="../scripts/session.js"></script>
 </head>
 <body>
     <div class="content">
@@ -19,6 +20,39 @@
             <section id="planner-overview" class="metronome-controls">
                 <h2>Practice Planner</h2>
                 <p>Create a practice plan for your session and check off items as you complete them.</p>
+
+                <section id="template-menu" class="template-menu">
+                    <div class="template-chooser">
+                        <h3>Session Menu</h3>
+                        <p class="template-menu-sub">Pick an instrument, a goal, or both for a ready-made session — or build your own with Custom.</p>
+                        <span class="pill-row-label">Instrument</span>
+                        <div class="template-pills" id="template-instruments">
+                            <button type="button" class="template-pill active" data-instrument="custom">Custom</button>
+                            <button type="button" class="template-pill" data-instrument="guitar">Guitar</button>
+                            <button type="button" class="template-pill" data-instrument="piano">Piano</button>
+                            <button type="button" class="template-pill" data-instrument="bass">Bass</button>
+                            <button type="button" class="template-pill" data-instrument="drums">Drums</button>
+                            <button type="button" class="template-pill" data-instrument="voice">Voice</button>
+                        </div>
+                        <span class="pill-row-label">I want to…</span>
+                        <div class="template-pills" id="template-goals">
+                            <button type="button" class="template-pill" data-goal="just-play">Just play</button>
+                            <button type="button" class="template-pill" data-goal="warm-up">Warm up</button>
+                            <button type="button" class="template-pill" data-goal="improve-timing">Improve my timing</button>
+                            <button type="button" class="template-pill" data-goal="ten-minutes">I just have 10 minutes</button>
+                            <button type="button" class="template-pill" data-goal="train-ears">Train my ears</button>
+                        </div>
+                        <div id="level-row" class="hidden">
+                            <span class="pill-row-label">Level</span>
+                            <div class="template-pills" id="template-levels">
+                                <button type="button" class="level-pill active" data-level="beginner">Beginner</button>
+                                <button type="button" class="level-pill" data-level="intermediate">Intermediate</button>
+                                <button type="button" class="level-pill" data-level="advanced">Advanced</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="template-preview" class="template-preview"></div>
+                </section>
 
                 <form id="planner-form" class="tracker-form">
                     <div class="form-row">
@@ -42,9 +76,22 @@
                         <label for="practice-duration">Estimated Time (minutes)</label>
                         <input type="number" id="practice-duration" min="1" max="120" step="1" placeholder="15">
                     </div>
-                    <button type="submit" id="add-item">Add to Plan</button>
-                    <button type="button" id="clear-completed">Clear Completed</button>
-                    <button type="button" id="clear-all">Clear All</button>
+                    <div class="form-row">
+                        <label for="practice-page">Tool Page (optional)</label>
+                        <select id="practice-page">
+                            <option value="">None</option>
+                            <option value="metronome">Metronome</option>
+                            <option value="chords">Chord Player</option>
+                            <option value="fretboard">Fretboard</option>
+                            <option value="tuner">Tuner</option>
+                            <option value="resources">Resources</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" id="add-item">Add to Plan</button>
+                        <button type="button" id="clear-completed">Clear Completed</button>
+                        <button type="button" id="clear-all">Clear All</button>
+                    </div>
                 </form>
 
                 <div id="planner-summary" class="tracker-summary">

@@ -26,6 +26,9 @@ async function loadHeader(customTitle = null, customSubtitle = null) {
             const p = header.querySelector('p');
             if (p) p.textContent = subtitle;
         }
+
+        // Let dependent scripts (session bar runner) know the header DOM exists
+        document.dispatchEvent(new CustomEvent('cadent-header-ready'));
     } catch (error) {
         console.error('Error loading header:', error);
     }

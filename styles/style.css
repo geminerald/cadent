@@ -563,6 +563,212 @@ button:active {
 }
 
 /* Practice Planner Styles */
+
+/* Widescreen planner — let the plan and chooser sit side by side */
+#planner-overview {
+    max-width: 1150px;
+}
+
+/* Session template menu */
+.template-menu {
+    background: rgba(13, 18, 25, 0.9);
+    border: 1px solid rgba(99, 255, 166, 0.3);
+    border-radius: 8px;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+@media (min-width: 900px) {
+    .template-menu {
+        display: grid;
+        grid-template-columns: minmax(280px, 2fr) 3fr;
+        gap: 1.75rem;
+        align-items: start;
+    }
+}
+
+.pill-row-label {
+    display: block;
+    font-size: 0.78rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #86e6ff;
+    margin: 0.7rem 0 0.4rem;
+}
+
+.template-placeholder h4 {
+    margin: 0 0 0.5rem;
+    color: #91ffcd;
+    font-size: 1.25rem;
+}
+
+.template-placeholder p {
+    margin: 0;
+    color: #8fdcfb;
+    font-style: italic;
+}
+
+.template-menu h3 {
+    margin-top: 0;
+    color: #b8fff2;
+}
+
+.template-menu-sub {
+    color: #8fdcfb;
+    margin: 0.25rem 0 1rem;
+}
+
+.template-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.9rem;
+}
+
+.template-pill, .level-pill {
+    padding: 0.45rem 1.1rem;
+    border-radius: 999px;
+    font-size: 0.92rem;
+    background: rgba(20, 32, 40, 0.85);
+    border: 1.5px solid rgba(141, 255, 213, 0.35);
+    box-shadow: none;
+}
+
+.template-pill.active, .level-pill.active {
+    background: linear-gradient(135deg, rgba(30, 120, 100, 0.85), rgba(20, 80, 70, 0.85));
+    border-color: rgba(92, 255, 208, 0.9);
+    color: #eafff7;
+    box-shadow: 0 0 12px rgba(52, 191, 158, 0.45);
+}
+
+.template-preview {
+    border: 1px solid rgba(99, 255, 166, 0.25);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    background: rgba(8, 12, 17, 0.85);
+}
+
+.template-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.template-preview-header h4 {
+    margin: 0;
+    color: #91ffcd;
+    font-size: 1.25rem;
+}
+
+.template-total {
+    color: #a8fdef;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Instrument badge shown when a goal is combined with an instrument */
+.template-badge {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 0.4rem;
+    padding: 0.15rem 0.6rem;
+    border: 1px solid rgba(141, 255, 213, 0.5);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: #b0f8d9;
+    background: rgba(20, 32, 40, 0.85);
+}
+
+.template-tagline {
+    margin: 0.35rem 0 0.9rem;
+    color: #8fdcfb;
+    font-style: italic;
+}
+
+.template-items {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+}
+
+.template-items li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.45rem 0;
+    border-bottom: 1px dashed rgba(99, 255, 166, 0.18);
+    color: #e0e6ec;
+}
+
+.template-items li:last-child {
+    border-bottom: none;
+}
+
+.template-item-meta {
+    color: #a8fdef;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    text-transform: capitalize;
+}
+
+/* The template menu shifts #planner-summary past the
+   .metronome-controls > div:nth-child(4) rule, so restate its grid here */
+#planner-overview .tracker-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    align-items: end;
+}
+
+/* Lay the Custom form out horizontally on wide screens */
+#planner-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    align-items: end;
+}
+
+#planner-form .form-row {
+    margin-bottom: 0;
+}
+
+.form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+}
+
+/* Tool-page chip on practice items */
+.item-tool {
+    color: #6fd3ff;
+    font-size: 0.85rem;
+    text-decoration: none;
+    border: 1px solid rgba(111, 211, 255, 0.35);
+    border-radius: 12px;
+    padding: 0.2rem 0.6rem;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.item-tool:hover {
+    border-color: rgba(111, 211, 255, 0.7);
+    background: rgba(111, 211, 255, 0.12);
+}
+
+.modal-item-tool {
+    color: #6fd3ff;
+    font-size: 0.8rem;
+    border: 1px solid rgba(111, 211, 255, 0.35);
+    border-radius: 12px;
+    padding: 0.15rem 0.5rem;
+    white-space: nowrap;
+}
+
 .tracker-form {
     background: rgba(13, 18, 25, 0.9);
     border: 1px solid rgba(99, 255, 166, 0.3);
@@ -980,6 +1186,39 @@ button:active {
 .nav-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+.current-item-link {
+    color: #6fd3ff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid rgba(111, 211, 255, 0.35);
+    border-radius: 12px;
+    padding: 0.25rem 0.7rem;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.current-item-link:hover {
+    border-color: rgba(111, 211, 255, 0.7);
+    background: rgba(111, 211, 255, 0.12);
+}
+
+.auto-switch-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    color: #9ef3c0;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.auto-switch-toggle input {
+    width: 15px;
+    height: 15px;
+    accent-color: #4fffdb;
 }
 
 /* Session Control Buttons */
