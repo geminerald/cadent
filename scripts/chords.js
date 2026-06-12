@@ -654,7 +654,8 @@ function renderDrumGrid() {
     const steps = getDrumSteps();
     const grid  = document.getElementById('drum-grid');
     grid.innerHTML = '';
-    grid.style.gridTemplateColumns = `72px repeat(${steps}, 1fr)`;
+    // minmax keeps each step tappable on phones — the wrapper scrolls sideways
+    grid.style.gridTemplateColumns = `72px repeat(${steps}, minmax(26px, 1fr))`;
 
     DRUM_ROWS.forEach(({ key, label }) => {
         const lbl = document.createElement('div');
@@ -703,14 +704,13 @@ function highlightDrumStep(step) {
         playhead.style.opacity = '0';
         return;
     }
-    // Use the first drum-step button at this step index to read its pixel position
+    // Use the first drum-step button at this step index to read its position.
+    // offsetLeft is relative to the positioned wrapper, so it stays correct
+    // when the grid is scrolled horizontally on narrow screens.
     const btn = document.querySelector(`.drum-step[data-step="${step}"]`);
     if (btn) {
-        const wrap = document.getElementById('drum-grid-wrap');
-        const wr   = wrap.getBoundingClientRect();
-        const br   = btn.getBoundingClientRect();
-        playhead.style.left    = `${br.left - wr.left}px`;
-        playhead.style.width   = `${br.width}px`;
+        playhead.style.left    = `${btn.offsetLeft}px`;
+        playhead.style.width   = `${btn.offsetWidth}px`;
         playhead.style.opacity = '1';
     }
 }
@@ -833,6 +833,13 @@ function syncBpm(value) {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Phones start with the advanced groups (voicing, common progressions)
+    // collapsed; on desktop they stay open and their toggles are hidden by CSS
+    if (window.matchMedia('(max-width: 640px)').matches) {
+        document.querySelectorAll('details.adv-collapse[open]')
+            .forEach(d => d.removeAttribute('open'));
+    }
+
     // Restore state
     progression = loadProgression();
     const saved = loadDrumPattern();
@@ -905,10 +912,14 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => applyDrumPreset(btn.dataset.preset));
     });
 
-    // Drum machine collapse toggle
+    // Drum machine collapse toggle — collapsed by default on phones until the
+    // user expresses a preference
     const drumBody   = document.getElementById('drum-body');
     const drumToggle = document.getElementById('drum-toggle');
-    const drumCollapsed = localStorage.getItem('drum-collapsed') === 'true';
+    const savedDrumCollapsed = localStorage.getItem('drum-collapsed');
+    const drumCollapsed = savedDrumCollapsed === null
+        ? window.matchMedia('(max-width: 640px)').matches
+        : savedDrumCollapsed === 'true';
     if (drumCollapsed) {
         drumBody.classList.add('collapsed');
         drumToggle.textContent = '▸';

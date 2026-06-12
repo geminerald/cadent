@@ -132,28 +132,32 @@
                                     <option value="8">8</option>
                                 </select>
                             </div>
-                            <div class="chord-adder-field">
-                                <label for="chord-octave">Octave</label>
-                                <select id="chord-octave">
-                                    <option value="-1">Low (−1)</option>
-                                    <option value="0" selected>Mid</option>
-                                    <option value="1">High (+1)</option>
-                                </select>
-                            </div>
-                            <div class="chord-adder-field">
-                                <label for="chord-inversion">Inversion</label>
-                                <select id="chord-inversion">
-                                    <option value="0" selected>Root</option>
-                                    <option value="1">1st</option>
-                                    <option value="2">2nd</option>
-                                    <option value="3">3rd (7ths)</option>
-                                </select>
-                            </div>
+                            <details class="adv-collapse" open>
+                                <summary>Voicing</summary>
+                                <div class="chord-adder-field">
+                                    <label for="chord-octave">Octave</label>
+                                    <select id="chord-octave">
+                                        <option value="-1">Low (−1)</option>
+                                        <option value="0" selected>Mid</option>
+                                        <option value="1">High (+1)</option>
+                                    </select>
+                                </div>
+                                <div class="chord-adder-field">
+                                    <label for="chord-inversion">Inversion</label>
+                                    <select id="chord-inversion">
+                                        <option value="0" selected>Root</option>
+                                        <option value="1">1st</option>
+                                        <option value="2">2nd</option>
+                                        <option value="3">3rd (7ths)</option>
+                                    </select>
+                                </div>
+                            </details>
                         </div>
                         <button id="add-chord-btn">+ Add Chord</button>
 
                         <!-- Common progression quick-add -->
-                        <div class="progression-adder">
+                        <details class="adv-collapse progression-adder" open>
+                            <summary>Common progressions</summary>
                             <div class="chord-adder-field">
                                 <label for="prog-key">Key</label>
                                 <select id="prog-key">
@@ -170,7 +174,7 @@
                                 <select id="prog-name"></select>
                             </div>
                             <button id="add-progression-btn" type="button">+ Add Progression</button>
-                        </div>
+                        </details>
                     </div>
 
                     <!-- Progression display (rendered by JS) -->

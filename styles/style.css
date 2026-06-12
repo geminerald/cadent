@@ -548,17 +548,88 @@ button:active {
     box-shadow: 0 0 24px rgba(0, 255, 210, 0.85);
 }
 
+/* ── Mobile & tablet ─────────────────────────────────────────────────────── */
+
 @media (max-width: 768px) {
     nav ul {
-        flex-direction: column;
+        gap: 0.3rem;
+        padding: 0.5rem 0.4rem;
     }
 
-    .metronome-controls, .tempo-ramp-control {
+    nav a {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    header {
+        padding: 1.2rem 0.8rem;
+    }
+
+    main {
+        margin: 1rem auto;
+        padding: 0 0.6rem;
+    }
+
+    section {
+        padding: 0.9rem;
+    }
+
+    .metronome-controls {
+        padding: 1rem;
+        gap: 1rem;
+    }
+
+    .tempo-ramp-control {
         grid-template-columns: 1fr;
     }
 
     .note-cards {
         grid-template-columns: 1fr;
+    }
+
+    .routine-timer,
+    .item-header {
+        flex-wrap: wrap;
+    }
+
+    .modal-content {
+        margin: 0 0.8rem;
+        padding: 1.25rem;
+        max-height: 85vh;
+    }
+
+    .beat-dot {
+        width: 30px;
+        height: 30px;
+    }
+}
+
+@media (max-width: 640px) {
+    /* 16px stops iOS Safari auto-zooming focused form controls */
+    select,
+    input[type="text"],
+    input[type="number"] {
+        font-size: 16px;
+    }
+}
+
+/* Touch devices: hover-revealed chord-card actions must always be visible.
+   They move from a floating overlay to a row beneath the card content. */
+@media (hover: none), (max-width: 640px) {
+    .card-actions {
+        opacity: 1;
+        position: static;
+        margin-top: 0.3rem;
+        justify-content: center;
+    }
+
+    .chord-copy,
+    .chord-remove,
+    .chord-oct-up,
+    .chord-oct-down {
+        width: 26px;
+        height: 26px;
+        transform: scale(1);
     }
 }
 
@@ -1652,6 +1723,45 @@ button:active {
     border-color: rgba(96, 255, 197, 0.75);
 }
 
+/* Collapsible "advanced" groups — expanded inline on desktop, where the
+   toggle disappears; tap-to-expand behind a labelled summary on phones */
+details.adv-collapse {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: flex-end;
+}
+
+details.adv-collapse > summary {
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid rgba(106, 247, 188, 0.35);
+    border-radius: 7px;
+    background: rgba(15, 28, 26, 0.8);
+    color: #8fdcfb;
+    font-size: 0.85rem;
+}
+
+details.adv-collapse > summary::-webkit-details-marker {
+    display: none;
+}
+
+details.adv-collapse > summary::after {
+    content: ' ▸';
+}
+
+details.adv-collapse[open] > summary::after {
+    content: ' ▾';
+}
+
+@media (min-width: 641px) {
+    details.adv-collapse[open] > summary {
+        display: none;
+    }
+}
+
 /* Progression card strip */
 #progression-area {
     min-height: 90px;
@@ -2062,9 +2172,11 @@ button:active {
     box-shadow: 0 0 10px rgba(30, 255, 150, 0.3);
 }
 
-/* Wrapper holds the grid + the absolute playhead */
+/* Wrapper holds the grid + the absolute playhead. Scrolls horizontally on
+   narrow screens — the JS grid template gives each step a minimum tap size. */
 #drum-grid-wrap {
     position: relative;
+    overflow-x: auto;
 }
 
 /* Grid: label col (set inline by JS) + N step cols */
