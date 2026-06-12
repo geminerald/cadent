@@ -381,26 +381,27 @@ function scheduleDrums() {
 }
 
 function runScheduler() {
-    // The progression can be emptied between scheduler ticks — bail out cleanly
-    if (progression.length === 0) {
-        stop();
-        return;
-    }
+    // Chord scheduler — skipped when there are no chords so the drum machine
+    // can run on its own (% progression.length would be NaN with zero chords)
+    if (progression.length > 0) {
+        while (nextChordTime < audioCtx.currentTime + LOOKAHEAD) {
+            const chord    = progression[playIndex];
+            const duration = scheduleChord(chord, nextChordTime);
 
-    // Chord scheduler
-    while (nextChordTime < audioCtx.currentTime + LOOKAHEAD) {
-        const chord    = progression[playIndex];
-        const duration = scheduleChord(chord, nextChordTime);
+            const delayMs = Math.max(0, (nextChordTime - audioCtx.currentTime) * 1000);
+            const idx = playIndex, sid = sessionId;
+            setTimeout(() => {
+                if (sessionId !== sid) return;
+                highlightChord(idx);
+            }, delayMs);
 
-        const delayMs = Math.max(0, (nextChordTime - audioCtx.currentTime) * 1000);
-        const idx = playIndex, sid = sessionId;
-        setTimeout(() => {
-            if (sessionId !== sid) return;
-            highlightChord(idx);
-        }, delayMs);
-
-        nextChordTime += duration;
-        playIndex = (playIndex + 1) % progression.length;
+            nextChordTime += duration;
+            playIndex = (playIndex + 1) % progression.length;
+        }
+    } else {
+        // No chords: keep the chord clock with the transport so that adding a
+        // chord mid-playback starts it cleanly instead of bursting to catch up
+        nextChordTime = audioCtx.currentTime;
     }
 
     // Drum scheduler
@@ -453,9 +454,13 @@ function startCountdown() {
 
 // ── Play / Stop ───────────────────────────────────────────────────────────────
 
+function hasDrumHits() {
+    return DRUM_ROWS.some(({ key }) => drumPattern[key].some(Boolean));
+}
+
 async function play() {
-    if (progression.length === 0) {
-        alert('Add at least one chord before playing.');
+    if (progression.length === 0 && !hasDrumHits()) {
+        alert('Add a chord or program a drum hit before playing.');
         return;
     }
 
