@@ -368,6 +368,11 @@ button:active {
     color: #d7f7ff;
 }
 
+/* Reserve the line so messages appearing/clearing don't shift the layout */
+#feedback {
+    min-height: 1.5em;
+}
+
 .note-cards {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -408,15 +413,101 @@ button:active {
     100% { transform: scale(1); box-shadow: 0 0 10px rgba(145, 255, 205, 0.5); }
 }
 
-.progress-checkboxes input.checked-glow + span,
-.progress-checkboxes input.checked-glow {
-    animation: glowPulse 0.5s ease-out;
+/* Fretboard drill progress pips */
+.progress-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
 }
 
-@keyframes glowPulse {
-    0% { transform: scale(1); background: rgba(0,0,0,0); }
-    50% { transform: scale(1.2); background: rgba(66, 255, 190, 0.6); }
-    100% { transform: scale(1); background: rgba(0,0,0,0); }
+.progress-header h3 {
+    margin: 0;
+}
+
+.progress-count {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #91ffcd;
+    text-shadow: 0 0 10px rgba(96, 255, 151, 0.4);
+}
+
+.progress-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin: 0.7rem 0 1rem;
+}
+
+.progress-step {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #6ab8d4;
+    background: rgba(13, 18, 25, 0.9);
+    border: 2px solid rgba(112, 255, 190, 0.35);
+    box-shadow: inset 0 1px 0 rgba(110, 236, 193, 0.1);
+    transition: all 0.2s ease;
+}
+
+.progress-step.done {
+    color: #06281e;
+    background: linear-gradient(135deg, #2dfab0, #00d68f);
+    border-color: rgba(120, 255, 210, 0.9);
+    box-shadow: 0 0 16px rgba(0, 255, 160, 0.5);
+}
+
+@keyframes stepPop {
+    0%   { transform: scale(1); }
+    45%  { transform: scale(1.35); box-shadow: 0 0 30px rgba(0, 255, 160, 0.9); }
+    100% { transform: scale(1); }
+}
+
+.progress-step.pop {
+    animation: stepPop 0.5s ease-out;
+}
+
+/* Endless mode has no pips — the running count pops instead */
+.progress-count.pop {
+    display: inline-block;
+    animation: stepPop 0.5s ease-out;
+}
+
+/* Drill options (length + mode). The doubled selector keeps it out of the
+   positional .metronome-controls > div:nth-child() grid rules, and
+   align/justify are set explicitly because those rules' alignment
+   properties would otherwise leak through. */
+.drill-options,
+.metronome-controls > div.drill-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 2rem;
+    align-items: flex-start;
+    justify-content: flex-start;
+    margin-top: 0.25rem;
+}
+
+.drill-option {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.drill-option .pill-row-label {
+    margin: 0 0 0.25rem;
+}
+
+.drill-option .template-pills {
+    margin-bottom: 0;
+}
+
+#drill-length .template-pill {
+    min-width: 52px;
 }
 
 /* The doubled selector out-ranks the positional .metronome-controls
@@ -491,27 +582,12 @@ button:active {
     color: #8bffb3;
 }
 
-.progress-checkboxes {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-}
-
-.progress-checkboxes label {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    color: #b0f8d9;
-}
-
-.progress-checkboxes input {
-    width: 16px;
-    height: 16px;
-}
-
 #drill-time {
     margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
     color: #9ef3c0;
+    font-family: 'Courier New', monospace;
 }
 
 .tempo-ramp-control {
@@ -780,8 +856,24 @@ button:active {
         grid-template-columns: 1fr;
     }
 
+    /* Note cards sit side by side as near-squares instead of stacked bars */
     .note-cards {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    .note-card {
+        aspect-ratio: 1.1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.75rem;
+    }
+
+    .note-card .note-value {
+        font-size: 1.5rem;   /* "Press Start" fits the square */
     }
 
     .routine-timer,
@@ -1664,6 +1756,23 @@ button:active {
     margin: 0 0 1.5rem;
     color: rgba(185, 255, 242, 0.7);
     font-size: 0.9rem;
+}
+
+/* Bullet list inside help modals (feature/option explanations) */
+.modal-list {
+    margin: -0.75rem 0 1.5rem;
+    padding-left: 1.2rem;
+    color: rgba(185, 255, 242, 0.75);
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.modal-list li {
+    margin-bottom: 0.4rem;
+}
+
+.modal-list strong {
+    color: #8effbc;
 }
 
 .modal-items-list {

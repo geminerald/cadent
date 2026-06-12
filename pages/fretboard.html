@@ -29,7 +29,25 @@
                         <div class="note-value" id="detected-note">--</div>
                     </div>
                 </div>
-                <div class="drill-status" id="feedback" style="color: #fbcf38;">Press start and play the note!</div>
+                <div class="drill-status" id="feedback"></div>
+                    <div class="drill-options">
+                        <div class="drill-option">
+                            <span class="pill-row-label">Notes per drill</span>
+                            <div class="template-pills" id="drill-length">
+                                <button type="button" class="template-pill active" data-length="5">5</button>
+                                <button type="button" class="template-pill" data-length="10">10</button>
+                                <button type="button" class="template-pill" data-length="15">15</button>
+                                <button type="button" class="template-pill" data-length="inf" title="Endless">∞</button>
+                            </div>
+                        </div>
+                        <div class="drill-option">
+                            <span class="pill-row-label">Mode</span>
+                            <div class="template-pills" id="drill-mode">
+                                <button type="button" class="template-pill active" data-mode="easy" title="Any octave counts — any E will do">Easy</button>
+                                <button type="button" class="template-pill" data-mode="exact" title="The exact note only — E3 means E3">Advanced</button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="drill-controls">
                         <button id="start-drill" class="icon-btn" data-icon="▶">Start Drill</button>
                         <button id="pause-drill" class="icon-btn" data-icon="❚❚" disabled>Pause Drill</button>
@@ -62,7 +80,12 @@
         <div class="modal-backdrop"></div>
         <div class="modal-content">
             <h2>Fretboard Note Recognition</h2>
-            <p class="modal-subtitle">A target note appears — find it on your fretboard and play it. The mic listens and checks it off when you hit it cleanly. Five random notes per drill, against the clock, covering open strings up to the 12th fret.</p>
+            <p class="modal-subtitle">Press ▶ and play the target note on your fretboard — the mic listens and marks it done when you hit it cleanly, against the clock.</p>
+            <ul class="modal-list">
+                <li><strong>Notes per drill</strong> — pick 5, 10 or 15 random notes, or go endless with ∞.</li>
+                <li><strong>Easy mode</strong> — the right note in any octave counts.</li>
+                <li><strong>Advanced mode</strong> — the exact note only: E3 means E3, and you'll get higher/lower hints.</li>
+            </ul>
             <div class="modal-actions">
                 <button class="modal-btn modal-btn-confirm help-close">Got it</button>
             </div>

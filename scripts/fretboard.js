@@ -17,11 +17,17 @@ const state = {
     drillPlan: [],
     stepIndex: 0,
     maxSteps: 5,
+    easyMode: true,         // easy = any octave counts; advanced = exact note
     startTime: null,
     elapsedTime: 0,
     timerInterval: null,
     rafId: null
 };
+
+// "E3" -> "E" — the note letter without its octave
+function pitchClass(name) {
+    return name.replace(/\d+$/, '');
+}
 
 function noteNameFromIndex(index) {
     const octave = Math.floor(index / 12);
@@ -115,14 +121,59 @@ function autocorrelate(buffer, sampleRate) {
     return sampleRate / bestOffset;
 }
 
+function shuffledNotes() {
+    return [...targetNotes].sort(() => Math.random() - 0.5);
+}
+
 function generateDrillPlan() {
-    const randomNotes = [...targetNotes].sort(() => Math.random() - 0.5);
-    return randomNotes.slice(0, state.maxSteps);
+    const randomNotes = shuffledNotes();
+    return state.maxSteps === Infinity ? randomNotes : randomNotes.slice(0, state.maxSteps);
 }
 
 function getNextTarget() {
-    if (state.stepIndex >= state.drillPlan.length) return null;
+    if (state.stepIndex >= state.drillPlan.length) {
+        if (state.maxSteps !== Infinity) return null;
+        // Endless mode: top the plan up with a fresh shuffle and keep going
+        state.drillPlan = state.drillPlan.concat(shuffledNotes());
+    }
     return state.drillPlan[state.stepIndex];
+}
+
+// ── Drill length (5 / 10 / 15 / endless) ────────────────────────────────────
+
+const LENGTH_KEY = 'fretboardDrillLength';
+const DRILL_LENGTHS = ['5', '10', '15', 'inf'];
+
+function renderProgressPips() {
+    const container = document.getElementById('progress-steps');
+    container.innerHTML = '';
+    if (state.maxSteps === Infinity) return;   // endless mode shows a count instead
+    for (let i = 1; i <= state.maxSteps; i++) {
+        const pip = document.createElement('div');
+        pip.className = 'progress-step';
+        pip.textContent = i;
+        container.appendChild(pip);
+    }
+}
+
+function setDrillLength(value) {
+    state.maxSteps = value === 'inf' ? Infinity : parseInt(value);
+    localStorage.setItem(LENGTH_KEY, value);
+    document.querySelectorAll('#drill-length .template-pill').forEach(pill =>
+        pill.classList.toggle('active', pill.dataset.length === value));
+    renderProgressPips();
+    resetDrill();   // a new length always means a fresh drill
+}
+
+// Easy / Advanced — switching mid-drill is fine, only the matching rule changes
+const MODE_KEY = 'fretboardDrillMode';
+
+function setDrillMode(value) {
+    state.easyMode = value !== 'exact';
+    localStorage.setItem(MODE_KEY, state.easyMode ? 'easy' : 'exact');
+    document.querySelectorAll('#drill-mode .template-pill').forEach(pill =>
+        pill.classList.toggle('active', pill.dataset.mode === (state.easyMode ? 'easy' : 'exact')));
+    updateTarget();
 }
 
 function updateTarget() {
@@ -131,7 +182,8 @@ function updateTarget() {
         targetEl.textContent = 'Press Start';
         return;
     }
-    targetEl.textContent = state.currentTarget;
+    // Easy mode accepts any octave, so only the letter is shown
+    targetEl.textContent = state.easyMode ? pitchClass(state.currentTarget) : state.currentTarget;
 }
 
 function markDrillComplete() {
@@ -141,10 +193,23 @@ function markDrillComplete() {
 }
 
 function updateChecklist() {
-    const checkboxes = document.querySelectorAll('#progress-checkboxes input');
-    checkboxes.forEach((input, i) => {
-        input.checked = i < state.stepIndex;
+    const count = document.getElementById('progress-count');
+
+    if (state.maxSteps === Infinity) {
+        if (count) count.textContent = `${state.stepIndex} ✓`;
+        return;
+    }
+
+    const steps = document.querySelectorAll('#progress-steps .progress-step');
+    steps.forEach((step, i) => {
+        const done = i < state.stepIndex;
+        step.classList.toggle('done', done);
+        step.textContent = done ? '✓' : String(i + 1);
     });
+
+    if (count) {
+        count.textContent = `${Math.min(state.stepIndex, state.maxSteps)} / ${state.maxSteps}`;
+    }
 }
 
 function updateTimer() {
@@ -179,22 +244,29 @@ function processAudio() {
             const detectedIndex = noteIndexFromName(detected.name);
             detectedElement.textContent = `${detected.name} (${detected.cents >= 0 ? '+' : ''}${detected.cents} cents)`;
 
+            const isMatch = state.easyMode
+                ? pitchClass(detected.name) === pitchClass(target || '')
+                : detected.name === target;
+
             if (target && targetIndex !== null && detectedIndex !== null) {
-                if (detected.name === target && confidenceNote) {
+                if (isMatch && confidenceNote) {
                     setFeedback(`Correct: ${detected.name} marked done!`, true);
                     state.stepIndex += 1;
                     updateChecklist();
 
-                    // card animation on success
+                    // card + progress animation on success — the pip pops, or in
+                    // endless mode (no pips) the running count pops instead
                     const targetCard = document.querySelector('.note-card:nth-child(1)');
-                    const checkboxInput = document.querySelector(`#progress-checkboxes label:nth-child(${state.stepIndex}) input`);
+                    const popTarget = document.querySelector(`#progress-steps .progress-step:nth-child(${state.stepIndex})`)
+                        || document.getElementById('progress-count');
                     if (targetCard) {
                         targetCard.classList.add('explode');
                         setTimeout(() => targetCard.classList.remove('explode'), 500);
                     }
-                    if (checkboxInput) {
-                        checkboxInput.classList.add('checked-glow');
-                        setTimeout(() => checkboxInput.classList.remove('checked-glow'), 500);
+                    if (popTarget) {
+                        popTarget.classList.remove('pop');
+                        void popTarget.offsetWidth;   // restart the animation
+                        popTarget.classList.add('pop');
                     }
 
                     if (state.stepIndex >= state.maxSteps) {
@@ -209,6 +281,9 @@ function processAudio() {
 
                     state.currentTarget = getNextTarget();
                     updateTarget();
+                } else if (state.easyMode) {
+                    // Any octave counts, so a directional hint would mislead
+                    setFeedback(`That's ${pitchClass(detected.name)} — keep trying for ${pitchClass(target)}.`);
                 } else {
                     const hint = detectedIndex < targetIndex ? 'too low — aim higher' : 'too high — aim lower';
                     setFeedback(`${detected.name} is ${hint}. Keep trying for ${target}.`);
@@ -317,7 +392,7 @@ function stopDrill() {
 
     document.getElementById('start-drill').disabled = false;
     document.getElementById('pause-drill').disabled = true;
-    setFeedback('Paused: press Start Drill to resume.');
+    setFeedback('Paused.');
 }
 
 function resetDrill() {
@@ -329,7 +404,7 @@ function resetDrill() {
     state.drillPlan = [];
     updateChecklist();
     updateTarget();
-    setFeedback('Drill reset. Press Start Drill to begin again.');
+    setFeedback('');   // idle — the tutorial covers the how-to
     document.getElementById('drill-time').textContent = 'Time: 0.00s';
 }
 
@@ -337,6 +412,19 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('start-drill').addEventListener('click', startDrill);
     document.getElementById('pause-drill').addEventListener('click', stopDrill);
     document.getElementById('reset-drill').addEventListener('click', resetDrill);
+
+    // Drill length + mode pickers — restore the saved choices
+    document.getElementById('drill-length').addEventListener('click', (e) => {
+        const pill = e.target.closest('.template-pill');
+        if (pill) setDrillLength(pill.dataset.length);
+    });
+    document.getElementById('drill-mode').addEventListener('click', (e) => {
+        const pill = e.target.closest('.template-pill');
+        if (pill) setDrillMode(pill.dataset.mode);
+    });
+    const savedLength = localStorage.getItem(LENGTH_KEY);
+    setDrillLength(DRILL_LENGTHS.includes(savedLength) ? savedLength : '5');
+    setDrillMode(localStorage.getItem(MODE_KEY) || 'easy');
 
     state.currentTarget = null;
     updateTarget();
