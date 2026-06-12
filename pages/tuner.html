@@ -7,7 +7,7 @@
     <link rel="icon" href="/images/tab-icon.png" type="icon">
     <link rel="stylesheet" href="../styles/style.css">
     <script>
-        window.pageTitle = "Instrument Tuner";
+        window.pageTitle = "Tuner";
         window.pageSubtitle = "Use your microphone to tune your instrument with real-time frequency feedback.";
     </script>
     <script src="../components/navbar/navbar.js"></script>
@@ -17,11 +17,20 @@
 <body>
     <div class="content">
         <main>
-            <section id="tuner-overview">
-                <h2>Tuner Tool</h2>
-                <p>Tap Start, play a string, and watch the pitch display. Use the visual needle to find the closest note.</p>
-            </section>
-            <section id="tuner-controls" class="metronome-controls">
+            <section id="tuner-controls" class="metronome-controls help-host">
+                <div class="tuner-meter">
+                    <div class="tuner-meter-marks">
+                        <span class="meter-label-flat">♭</span>
+                        <span class="meter-label-center">♩</span>
+                        <span class="meter-label-sharp">♯</span>
+                    </div>
+                    <div id="needle"></div>
+                </div>
+                <div class="tuner-direction" id="tuner-feedback">Microphone offline</div>
+                <div class="drill-controls tuner-buttons">
+                    <button id="tuner-start" class="mini-btn" title="Start" aria-label="Start tuner">▶</button>
+                    <button id="tuner-pause" class="mini-btn" title="Pause" aria-label="Pause tuner" disabled>❚❚</button>
+                </div>
                 <div class="note-cards">
                     <div class="note-card">
                         <div class="note-label">Detected Pitch</div>
@@ -32,27 +41,28 @@
                         <div class="note-value" id="tuner-cents">--</div>
                     </div>
                 </div>
-                <div class="drill-controls">
-                    <button id="tuner-start">Start</button>
-                    <button id="tuner-pause" disabled>Pause</button>
-                    <button id="tuner-reset">Reset</button>
-                </div>
-                <div class="tuner-direction" id="tuner-feedback">Microphone offline</div>
-                <div class="tuner-meter">
-                    <div class="tuner-meter-marks">
-                        <span class="meter-label-flat">♭</span>
-                        <span class="meter-label-center">♩</span>
-                        <span class="meter-label-sharp">♯</span>
-                    </div>
-                    <div id="needle"></div>
-                </div>
                 <div class="drill-status" id="tuner-freq">-- Hz</div>
+                <button id="page-help" class="help-btn" title="How to use" aria-label="How to use the tuner">?</button>
             </section>
         </main>
         <footer>
             <p>&copy; 2026 Cadent. All rights reserved.</p>
         </footer>
     </div>
+
+    <!-- First-visit help modal (reopens via the ? button) -->
+    <div id="page-help-modal" class="session-modal" data-help-key="cadentTunerHelpSeen" style="display: none;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <h2>Using the Tuner</h2>
+            <p class="modal-subtitle">Tap ▶ and play a single string or note. The needle shows how close you are — flat to the left, sharp to the right. Tune slowly until the needle sits centred and turns green.</p>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-confirm help-close">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../scripts/help.js"></script>
     <script src="../scripts/tuner.js"></script>
 </body>
 </html>

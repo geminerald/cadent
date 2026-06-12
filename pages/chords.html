@@ -7,7 +7,7 @@
     <link rel="icon" href="/images/tab-icon.png" type="icon">
     <link rel="stylesheet" href="../styles/style.css">
     <script>
-        window.pageTitle = "Chord Player";
+        window.pageTitle = "Chords";
         window.pageSubtitle = "Build a chord progression and loop it as a backing track.";
     </script>
     <script src="../components/navbar/navbar.js"></script>
@@ -25,10 +25,7 @@
         <main>
 
             <!-- ── Chord Builder ─────────────────────────────────────── -->
-            <section id="chord-player">
-                <h2>Backing Track Builder</h2>
-                <p>Add chords to build a progression, then hit Play to loop it in time.</p>
-
+            <section id="chord-player" class="help-host">
                 <div class="metronome-controls">
 
                     <!-- Tempo · Sound · Beats per line -->
@@ -84,6 +81,20 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Playback transport (shared by both tabs) -->
+                    <div class="playback-controls">
+                        <button id="play-btn" class="icon-btn" data-icon="▶">▶ Play</button>
+                        <button id="stop-btn" class="icon-btn" data-icon="■" disabled>■ Stop</button>
+                    </div>
+
+                    <!-- Chord Progression / Drum Machine tabs -->
+                    <div class="tool-tabs" role="tablist">
+                        <button type="button" class="tool-tab active" data-tab="chords" role="tab" aria-selected="true">Chord Progression</button>
+                        <button type="button" class="tool-tab" data-tab="drums" role="tab" aria-selected="false">Drum Machine</button>
+                    </div>
+
+                    <div id="tab-panel-chords" class="tab-panel" role="tabpanel">
 
                     <!-- Add chord form -->
                     <div class="chord-adder">
@@ -152,8 +163,8 @@
                                     </select>
                                 </div>
                             </details>
+                            <button id="add-chord-btn">+ Add Chord</button>
                         </div>
-                        <button id="add-chord-btn">+ Add Chord</button>
 
                         <!-- Common progression quick-add -->
                         <details class="adv-collapse progression-adder" open>
@@ -190,46 +201,40 @@
                         <button id="clear-selection-btn">✕ Deselect All</button>
                     </div>
 
-                    <!-- Playback controls -->
-                    <div class="playback-controls">
-                        <button id="play-btn">▶ Play</button>
-                        <button id="stop-btn" disabled>■ Stop</button>
+                    <div class="panel-footer">
                         <button id="clear-btn">Clear All</button>
                     </div>
 
-                </div>
-            </section>
+                    </div><!-- /tab-panel-chords -->
 
-            <!-- ── Drum Machine ──────────────────────────────────────── -->
-            <section id="drum-machine">
-                <h2>Drum Machine <button id="drum-toggle" class="section-toggle" title="Toggle drum machine">▾</button></h2>
+                    <!-- ── Drum Machine tab ───────────────────────────── -->
+                    <div id="tab-panel-drums" class="tab-panel hidden" role="tabpanel">
 
-                <div id="drum-body">
-                <div class="metronome-controls">
-
-                    <div class="drum-header">
-                        <div class="drum-volume-row">
-                            <label for="drum-volume">Volume</label>
-                            <input type="range" id="drum-volume" min="0" max="100" value="70" step="1">
-                            <span id="drum-volume-display">70%</span>
+                        <div class="drum-header">
+                            <div class="drum-volume-row">
+                                <label for="drum-volume">Volume</label>
+                                <input type="range" id="drum-volume" min="0" max="100" value="70" step="1">
+                                <span id="drum-volume-display">70%</span>
+                            </div>
+                            <div class="drum-presets-row">
+                                <span class="preset-row-label">Presets:</span>
+                                <button class="drum-preset-btn" data-preset="rock">Rock</button>
+                                <button class="drum-preset-btn" data-preset="funk">Funk</button>
+                                <button class="drum-preset-btn" data-preset="house">House</button>
+                                <button class="drum-preset-btn" data-preset="clear">Clear</button>
+                            </div>
                         </div>
-                        <div class="drum-presets-row">
-                            <span class="preset-row-label">Presets:</span>
-                            <button class="drum-preset-btn" data-preset="rock">Rock</button>
-                            <button class="drum-preset-btn" data-preset="funk">Funk</button>
-                            <button class="drum-preset-btn" data-preset="house">House</button>
-                            <button class="drum-preset-btn" data-preset="clear">Clear</button>
+
+                        <!-- Step grid + playhead, built by JS -->
+                        <div id="drum-grid-wrap">
+                            <div id="drum-grid" class="drum-grid"></div>
+                            <div id="drum-playhead"></div>
                         </div>
-                    </div>
 
-                    <!-- Step grid + playhead, built by JS -->
-                    <div id="drum-grid-wrap">
-                        <div id="drum-grid" class="drum-grid"></div>
-                        <div id="drum-playhead"></div>
-                    </div>
+                    </div><!-- /tab-panel-drums -->
 
                 </div>
-                </div>
+                <button id="page-help" class="help-btn" title="How to use" aria-label="How to use the chord player">?</button>
             </section>
 
         </main>
@@ -238,6 +243,19 @@
         </footer>
     </div>
 
+    <!-- First-visit help modal (reopens via the ? button) -->
+    <div id="page-help-modal" class="session-modal" data-help-key="cadentChordsHelpSeen" style="display: none;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <h2>Using the Chord Player</h2>
+            <p class="modal-subtitle">Build a progression by adding chords — or load a common one in a single tap — then hit ▶ to loop it as a backing track with a count-in. Switch to the Drum Machine tab to lay a beat underneath.</p>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-confirm help-close">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../scripts/help.js"></script>
     <script src="../scripts/chords.js"></script>
 </body>
 </html>

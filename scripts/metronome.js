@@ -148,10 +148,10 @@ class Metronome {
         startStopButton.addEventListener('click', () => {
             if (this.isPlaying) {
                 this.stop();
-                startStopButton.textContent = 'Start';
+                this.setStartStopLabel('Start');
             } else {
                 this.start();
-                startStopButton.textContent = 'Stop';
+                this.setStartStopLabel('Stop');
             }
         });
 
@@ -209,7 +209,14 @@ class Metronome {
     restart() {
         this.stop();
         this.start();
-        document.getElementById('start-stop').textContent = 'Stop';
+        this.setStartStopLabel('Stop');
+    }
+
+    // Keeps the text and the mobile icon (data-icon) in step
+    setStartStopLabel(label) {
+        const btn = document.getElementById('start-stop');
+        btn.textContent = label;
+        btn.dataset.icon = label === 'Stop' ? '■' : '▶';
     }
 
     updateTempoDisplay() {

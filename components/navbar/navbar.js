@@ -38,6 +38,28 @@ async function loadNavbar() {
             link.href = linkPath(pageKey);
             link.classList.toggle('active', pageKey === currentKey);
         });
+
+        // Hamburger toggle (shown on mobile via CSS)
+        const navToggle = document.getElementById('nav-toggle');
+        const navMenu = document.getElementById('nav-menu');
+        if (navToggle && navMenu) {
+            // Label the closed menu with the page you're on
+            const activeLink = navMenu.querySelector('a.active');
+            if (activeLink) {
+                navToggle.querySelector('.nav-toggle-label').textContent = activeLink.textContent;
+            }
+
+            navToggle.addEventListener('click', () => {
+                const open = navMenu.classList.toggle('open');
+                navToggle.setAttribute('aria-expanded', open);
+            });
+
+            // Picking a destination closes the menu
+            navLinks.forEach(link => link.addEventListener('click', () => {
+                navMenu.classList.remove('open');
+                navToggle.setAttribute('aria-expanded', 'false');
+            }));
+        }
     } catch (error) {
         console.error('Error loading navbar:', error);
     }

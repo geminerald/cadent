@@ -248,18 +248,8 @@ async function startTuner() {
     }
 }
 
-function resetTuner() {
-    pauseTuner();
-    document.getElementById('tuner-note').textContent = '--';
-    document.getElementById('tuner-cents').textContent = '--';
-    document.getElementById('tuner-freq').textContent = '-- Hz';
-    updateNeedle(0);
-    setTunerFeedback('Reset. Press Start to begin.');
-}
-
 window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('tuner-start').addEventListener('click', startTuner);
     document.getElementById('tuner-pause').addEventListener('click', pauseTuner);
-    document.getElementById('tuner-reset').addEventListener('click', resetTuner);
     updateNeedle(0);
 });

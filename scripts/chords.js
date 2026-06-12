@@ -471,15 +471,18 @@ async function play() {
     if (isSoundfont(sound) && !sfLoaded.has(soundfontName(sound))) {
         const sid = sessionId;
         playBtn.textContent = 'Loading…';
+        playBtn.dataset.icon = '…';
         try {
             await loadSoundfont(soundfontName(sound));
         } catch {
             playBtn.textContent = '▶ Play';
+            playBtn.dataset.icon = '▶';
             playBtn.disabled = false;
             alert('Couldn\'t load that instrument (check your connection). The Synth sounds work offline.');
             return;
         }
         playBtn.textContent = '▶ Play';
+        playBtn.dataset.icon = '▶';
         if (sessionId !== sid) return;   // stopped while loading
     }
 
@@ -912,21 +915,25 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => applyDrumPreset(btn.dataset.preset));
     });
 
-    // Drum machine collapse toggle — collapsed by default on phones until the
-    // user expresses a preference
-    const drumBody   = document.getElementById('drum-body');
-    const drumToggle = document.getElementById('drum-toggle');
-    const savedDrumCollapsed = localStorage.getItem('drum-collapsed');
-    const drumCollapsed = savedDrumCollapsed === null
-        ? window.matchMedia('(max-width: 640px)').matches
-        : savedDrumCollapsed === 'true';
-    if (drumCollapsed) {
-        drumBody.classList.add('collapsed');
-        drumToggle.textContent = '▸';
+    // Chord Progression / Drum Machine tabs — selection persists across visits
+    const toolTabs  = document.querySelectorAll('.tool-tab');
+    const tabPanels = {
+        chords: document.getElementById('tab-panel-chords'),
+        drums:  document.getElementById('tab-panel-drums'),
+    };
+
+    function selectTab(name) {
+        if (!tabPanels[name]) name = 'chords';
+        toolTabs.forEach(tab => {
+            const active = tab.dataset.tab === name;
+            tab.classList.toggle('active', active);
+            tab.setAttribute('aria-selected', active);
+        });
+        Object.entries(tabPanels).forEach(([key, panel]) =>
+            panel.classList.toggle('hidden', key !== name));
+        localStorage.setItem('chord-tab', name);
     }
-    drumToggle.addEventListener('click', () => {
-        const nowCollapsed = drumBody.classList.toggle('collapsed');
-        drumToggle.textContent = nowCollapsed ? '▸' : '▾';
-        localStorage.setItem('drum-collapsed', nowCollapsed);
-    });
+
+    toolTabs.forEach(tab => tab.addEventListener('click', () => selectTab(tab.dataset.tab)));
+    selectTab(localStorage.getItem('chord-tab') || 'chords');
 });

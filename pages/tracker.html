@@ -7,7 +7,7 @@
     <link rel="icon" href="/images/tab-icon.png" type="icon">
     <link rel="stylesheet" href="../styles/style.css">
     <script>
-        window.pageTitle = "Practice Planner";
+        window.pageTitle = "Planner";
         window.pageSubtitle = "Plan your practice sessions and track your progress.";
     </script>
     <script src="../components/navbar/navbar.js"></script>
@@ -17,10 +17,7 @@
 <body>
     <div class="content">
         <main>
-            <section id="planner-overview" class="metronome-controls">
-                <h2>Practice Planner</h2>
-                <p>Create a practice plan for your session and check off items as you complete them.</p>
-
+            <section id="planner-overview" class="metronome-controls help-host">
                 <section id="template-menu" class="template-menu">
                     <div class="template-chooser">
                         <h3>Session Menu</h3>
@@ -110,6 +107,7 @@
                         <button type="button" id="clear-all">Clear All</button>
                     </div>
                 </section>
+                <button id="page-help" class="help-btn" title="How to use" aria-label="How to use the practice planner">?</button>
             </section>
         </main>
     </div>
@@ -136,6 +134,19 @@
         </div>
     </div>
 
+    <!-- First-visit help modal (reopens via the ? button) -->
+    <div id="page-help-modal" class="session-modal" data-help-key="cadentPlannerHelpSeen" style="display: none;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <h2>Using the Planner</h2>
+            <p class="modal-subtitle">Grab a ready-made session for your instrument, your goal, or both — or build your own with Custom. Start the session and the timer walks you through each item, opening the right practice tool as you go. Check items off as you complete them.</p>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-confirm help-close">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../scripts/help.js"></script>
     <script src="../scripts/tracker.js"></script>
 </body>
 </html>

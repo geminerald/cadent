@@ -7,7 +7,7 @@
     <link rel="icon" href="/images/tab-icon.png" type="icon">
     <link rel="stylesheet" href="../styles/style.css">
     <script>
-        window.pageTitle = "Fretboard Memory Trainer";
+        window.pageTitle = "Fretboard";
         window.pageSubtitle = "Practice guitar fretboard notes and patterns with guided drills.";
     </script>
     <script src="../components/navbar/navbar.js"></script>
@@ -17,31 +17,8 @@
 <body>
     <div class="content">
         <main>
-            <section id="fretboard-overview">
-                <h2>Fretboard Learning</h2>
-                <p>Learn the notes on the guitar fretboard quickly by practicing position-based drills. Start with open strings, then move to key frets and octaves.</p>
-            </section>
-            <section id="fretboard-tools">
-                <h2>Practice Tools</h2>
-                <div class="feature-grid">
-                    <div class="feature">
-                        <h3>Random Note Drill</h3>
-                        <p>Show a random fret and string to identify and name the note.</p>
-                    </div>
-                    <div class="feature">
-                        <h3>Scale Position Drill</h3>
-                        <p>Practice scale patterns across fretboard positions and string sets.</p>
-                    </div>
-                    <div class="feature">
-                        <h3>Chord Shape Drill</h3>
-                        <p>Test chord-shape memorization over different barre and open forms.</p>
-                    </div>
-                </div>
-            </section>
-            <section id="fretboard-drill">
-                <h2>Fretboard Note Recognition</h2>
+            <section id="fretboard-drill" class="help-host">
                 <div class="metronome-controls">
-                    <p>Listen to your guitar and play the target note displayed below; correct answers will mark as done.</p>
                     <div class="note-cards">
                     <div class="note-card">
                         <div class="note-label">Target Note</div>
@@ -54,28 +31,45 @@
                 </div>
                 <div class="drill-status" id="feedback" style="color: #fbcf38;">Press start and play the note!</div>
                     <div class="drill-controls">
-                        <button id="start-drill">Start Drill</button>
-                        <button id="pause-drill" disabled>Pause Drill</button>
-                        <button id="reset-drill">Reset Drill</button>
+                        <button id="start-drill" class="icon-btn" data-icon="▶">Start Drill</button>
+                        <button id="pause-drill" class="icon-btn" data-icon="❚❚" disabled>Pause Drill</button>
+                        <button id="reset-drill" class="icon-btn" data-icon="↺">Reset Drill</button>
                     </div>
                     <div class="progress-items">
-                        <h3>Progress</h3>
-                        <div id="progress-checkboxes" class="progress-checkboxes">
-                            <label><input type="checkbox" disabled><span>1</span></label>
-                            <label><input type="checkbox" disabled><span>2</span></label>
-                            <label><input type="checkbox" disabled><span>3</span></label>
-                            <label><input type="checkbox" disabled><span>4</span></label>
-                            <label><input type="checkbox" disabled><span>5</span></label>
+                        <div class="progress-header">
+                            <h3>Progress</h3>
+                            <span id="progress-count" class="progress-count">0 / 5</span>
+                        </div>
+                        <div id="progress-steps" class="progress-steps">
+                            <div class="progress-step">1</div>
+                            <div class="progress-step">2</div>
+                            <div class="progress-step">3</div>
+                            <div class="progress-step">4</div>
+                            <div class="progress-step">5</div>
                         </div>
                         <p id="drill-time">Time: 0.00s</p>
                     </div>
                 </div>
+                <button id="page-help" class="help-btn" title="How to use" aria-label="How to use the fretboard trainer">?</button>
             </section>
         </main>
         <footer>
             <p>&copy; 2026 Cadent. All rights reserved.</p>
         </footer>
     </div>
+    <!-- First-visit help modal (reopens via the ? button) -->
+    <div id="page-help-modal" class="session-modal" data-help-key="cadentFretboardHelpSeen" style="display: none;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <h2>Fretboard Note Recognition</h2>
+            <p class="modal-subtitle">A target note appears — find it on your fretboard and play it. The mic listens and checks it off when you hit it cleanly. Five random notes per drill, against the clock, covering open strings up to the 12th fret.</p>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-confirm help-close">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../scripts/help.js"></script>
     <script src="../scripts/fretboard.js"></script>
 </body>
 </html>

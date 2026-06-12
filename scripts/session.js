@@ -135,6 +135,12 @@
         return true;
     }
 
+    // Keeps the toggle's text and its mobile icon (data-icon) in step
+    function setToggleLabel(label) {
+        els.toggle.textContent = label;
+        els.toggle.dataset.icon = label === 'Pause' ? '❚❚' : '▶';
+    }
+
     function showBar() {
         els.bar.style.display = 'flex';
         els.endBtn.style.display = 'inline-block';   // always available during a session
@@ -279,7 +285,7 @@
         running = true;
         startTime = Date.now() - elapsed * 1000;
         tickId = setInterval(tick, 500);
-        els.toggle.textContent = 'Pause';
+        setToggleLabel('Pause');
         els.toggle.classList.add('active');
         saveState();
 
@@ -295,7 +301,7 @@
         if (running) elapsed = Math.floor((Date.now() - startTime) / 1000);
         running = false;
         stopTicking();
-        els.toggle.textContent = elapsed > 0 ? 'Resume' : 'Start';
+        setToggleLabel(elapsed > 0 ? 'Resume' : 'Start');
         els.toggle.classList.remove('active');
         saveState();
     }
@@ -327,7 +333,7 @@
         if (!ensureEls()) return;
         showBar();
         renderSegments();
-        els.toggle.textContent = 'Start';
+        setToggleLabel('Start');
         els.toggle.classList.remove('active');
         prevSegment = segmentAt(0);
         updateCurrentItem(prevSegment);
@@ -388,10 +394,10 @@
         } else if (state.isTimerRunning && state.startTime) {
             running = true;
             tickId = setInterval(tick, 500);
-            els.toggle.textContent = 'Pause';
+            setToggleLabel('Pause');
             els.toggle.classList.add('active');
         } else {
-            els.toggle.textContent = elapsed > 0 ? 'Resume' : 'Start';
+            setToggleLabel(elapsed > 0 ? 'Resume' : 'Start');
         }
 
         notifyChange();
