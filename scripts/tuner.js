@@ -20,6 +20,7 @@ const SILENCE_FRAMES = 20;
 const tunerState = {
     audioContext: null,
     analyser: null,
+    analysisBuffer: null,   // reused each frame instead of reallocating
     stream: null,
     rafId: null,
     active: false,
@@ -144,7 +145,7 @@ function clearDisplay() {
 function processTuner() {
     if (!tunerState.active) return;
 
-    const buffer = new Float32Array(tunerState.analyser.fftSize);
+    const buffer = tunerState.analysisBuffer;
     tunerState.analyser.getFloatTimeDomainData(buffer);
     const freq = autocorrelate(buffer, tunerState.audioContext.sampleRate);
 
@@ -231,6 +232,7 @@ async function startTuner() {
         const source = tunerState.audioContext.createMediaStreamSource(tunerState.stream);
         tunerState.analyser = tunerState.audioContext.createAnalyser();
         tunerState.analyser.fftSize = 4096;
+        tunerState.analysisBuffer = new Float32Array(tunerState.analyser.fftSize);
         source.connect(tunerState.analyser);
 
         tunerState.active = true;

@@ -108,7 +108,6 @@ const DRUM_KEY = 'cadentDrumPattern';
 
 let progression    = [];
 let bpm            = 120;
-let beatsPerLine   = 16;
 let selectedSet    = new Set();
 
 let activeDrumSteps = 16;   // locked in at play-start from beats-per-line
@@ -141,7 +140,8 @@ let audioCtx    = null;
 let masterGain  = null;
 let sessionGain = null;
 let drumGain    = null;
-let isPlaying   = false;
+let isPlaying   = false;   // true once the count-in finishes and the loop runs
+let playbackArmed = false; // true from Play press until Stop — covers the count-in too
 let schedulerId = null;
 
 function ensureAudio() {
@@ -173,11 +173,16 @@ function chordLabel(root, type) {
     return root + CHORD_TYPES[type].suffix;
 }
 
-// Bass root (octave below) + chord tones from ROOT_BASE.
-// Our semitone index has C0 = 0, so MIDI = index + 12.
-function getVoicing(root, type) {
-    const rootIdx = ROOT_BASE + NOTE_NAMES.indexOf(root);
-    const indices = [rootIdx - 12, ...CHORD_TYPES[type].intervals.map(iv => rootIdx + iv)];
+// Chord tones from ROOT_BASE, shifted by `octave` (±1). `inversion` moves the
+// lowest n tones up an octave; the bass doubles whatever tone ends up lowest,
+// one octave down. Our semitone index has C0 = 0, so MIDI = index + 12.
+function getVoicing(root, type, octave = 0, inversion = 0) {
+    const rootIdx   = ROOT_BASE + octave * 12 + NOTE_NAMES.indexOf(root);
+    const intervals = CHORD_TYPES[type].intervals;
+    const inv       = Math.min(inversion, intervals.length - 1);
+    const ivs       = intervals.map((iv, i) => (i < inv ? iv + 12 : iv));
+    const lowest    = Math.min(...ivs);
+    const indices   = [rootIdx + lowest - 12, ...ivs.map(iv => rootIdx + iv)];
     return indices.map((idx, i) => ({
         freq:   noteFreq(idx),
         midi:   idx + 12,
@@ -220,7 +225,7 @@ function scheduleNote(freq, isBass, t0, chordDuration, preset) {
 function scheduleChord(chord, startTime) {
     const sound    = document.getElementById('sound-type').value;
     const duration = chord.beats * (60 / bpm);
-    const voices   = getVoicing(chord.root, chord.type);
+    const voices   = getVoicing(chord.root, chord.type, chord.octave || 0, chord.inversion || 0);
 
     if (isSoundfont(sound)) {
         const inst = sfLoaded.get(soundfontName(sound));
@@ -249,11 +254,20 @@ function scheduleChord(chord, startTime) {
 
 // ── Drum synthesis ────────────────────────────────────────────────────────────
 
-function makeNoiseBuf(seconds) {
-    const len  = Math.ceil(audioCtx.sampleRate * seconds);
-    const buf  = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+// Noise buffers are generated once per duration and reused — like a sampled
+// drum hit, replaying the same noise is inaudible but avoids regenerating
+// thousands of samples on every beat.
+const noiseBufs = new Map();   // seconds -> AudioBuffer
+
+function getNoiseBuf(seconds) {
+    let buf = noiseBufs.get(seconds);
+    if (!buf) {
+        const len  = Math.ceil(audioCtx.sampleRate * seconds);
+        buf  = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+        noiseBufs.set(seconds, buf);
+    }
     return buf;
 }
 
@@ -272,7 +286,7 @@ function synthKick(t) {
 
     // Short noise click for attack transient
     const src  = audioCtx.createBufferSource();
-    src.buffer = makeNoiseBuf(0.005);
+    src.buffer = getNoiseBuf(0.005);
     const g    = audioCtx.createGain();
     src.connect(g);
     g.connect(drumGain);
@@ -283,7 +297,7 @@ function synthKick(t) {
 function synthSnare(t) {
     // Noise body through a bandpass filter
     const src    = audioCtx.createBufferSource();
-    src.buffer   = makeNoiseBuf(0.2);
+    src.buffer   = getNoiseBuf(0.2);
     const filter = audioCtx.createBiquadFilter();
     filter.type  = 'bandpass';
     filter.frequency.value = 1500;
@@ -312,7 +326,7 @@ function synthSnare(t) {
 
 function synthHihat(t) {
     const src    = audioCtx.createBufferSource();
-    src.buffer   = makeNoiseBuf(0.12);
+    src.buffer   = getNoiseBuf(0.12);
     // Highpass at 5kHz keeps the crisp hi-hat "tick" while staying audible
     const filter = audioCtx.createBiquadFilter();
     filter.type  = 'highpass';
@@ -367,6 +381,12 @@ function scheduleDrums() {
 }
 
 function runScheduler() {
+    // The progression can be emptied between scheduler ticks — bail out cleanly
+    if (progression.length === 0) {
+        stop();
+        return;
+    }
+
     // Chord scheduler
     while (nextChordTime < audioCtx.currentTime + LOOKAHEAD) {
         const chord    = progression[playIndex];
@@ -472,6 +492,7 @@ async function play() {
     drumGain.connect(audioCtx.destination);
 
     activeDrumSteps = getDrumSteps();   // lock step count for this playback session
+    playbackArmed = true;
 
     document.getElementById('stop-btn').disabled = false;
 
@@ -482,6 +503,7 @@ function stop() {
     sessionId++;     // cancel pending countdown + highlight callbacks
 
     isPlaying = false;
+    playbackArmed = false;
     clearTimeout(schedulerId);
     schedulerId = null;
 
@@ -515,16 +537,64 @@ function loadDrumPattern()  {
 }
 
 function addChord() {
-    const root  = document.getElementById('chord-root').value;
-    const type  = document.getElementById('chord-type').value;
-    const beats = parseInt(document.getElementById('chord-beats').value);
-    progression.push({ root, type, beats });
+    const root      = document.getElementById('chord-root').value;
+    const type      = document.getElementById('chord-type').value;
+    const beats     = parseInt(document.getElementById('chord-beats').value);
+    const octave    = parseInt(document.getElementById('chord-octave').value) || 0;
+    // Triads cap at 2nd inversion — only four-note chords have a 3rd
+    const inversion = Math.min(
+        parseInt(document.getElementById('chord-inversion').value) || 0,
+        CHORD_TYPES[type].intervals.length - 1
+    );
+    progression.push({ root, type, beats, octave, inversion });
+    saveProgression();
+    renderProgression();
+}
+
+// ── Common progressions ───────────────────────────────────────────────────────
+// Scale degrees as semitone offsets from the selected key's root
+
+const COMMON_PROGRESSIONS = {
+    'axis':       { label: 'I–V–vi–IV (Pop Anthem)',    chords: [[0, 'maj'], [7, 'maj'], [9, 'min'], [5, 'maj']] },
+    'doowop':     { label: 'I–vi–IV–V (50s Doo-Wop)',   chords: [[0, 'maj'], [9, 'min'], [5, 'maj'], [7, 'maj']] },
+    'threechord': { label: 'I–IV–V (Three-Chord Rock)', chords: [[0, 'maj'], [5, 'maj'], [7, 'maj']] },
+    'ballad':     { label: 'vi–IV–I–V (Pop Ballad)',    chords: [[9, 'min'], [5, 'maj'], [0, 'maj'], [7, 'maj']] },
+    'jazz251':    { label: 'ii–V–I (Jazz Turnaround)',  chords: [[2, 'min7'], [7, '7'], [0, 'maj7']] },
+    'circle':     { label: 'I–vi–ii–V (Circle)',        chords: [[0, 'maj'], [9, 'min'], [2, 'min'], [7, '7']] },
+    'andalusian': { label: 'i–♭VII–♭VI–V (Andalusian)', chords: [[0, 'min'], [10, 'maj'], [8, 'maj'], [7, 'maj']] },
+    'blues':      { label: '12-Bar Blues (I7–IV7–V7)',
+                    chords: [[0, '7'], [0, '7'], [0, '7'], [0, '7'],
+                             [5, '7'], [5, '7'], [0, '7'], [0, '7'],
+                             [7, '7'], [5, '7'], [0, '7'], [7, '7']] },
+};
+
+function addProgression() {
+    const keyIdx = NOTE_NAMES.indexOf(document.getElementById('prog-key').value);
+    const prog   = COMMON_PROGRESSIONS[document.getElementById('prog-name').value];
+    if (!prog || keyIdx < 0) return;
+
+    prog.chords.forEach(([degree, type]) => {
+        progression.push({
+            root:      NOTE_NAMES[(keyIdx + degree) % 12],
+            type:      type,
+            beats:     4,
+            octave:    0,
+            inversion: 0,
+        });
+    });
+    saveProgression();
+    renderProgression();
+}
+
+function shiftOctave(index, delta) {
+    const chord = progression[index];
+    chord.octave = Math.max(-1, Math.min(1, (chord.octave || 0) + delta));
     saveProgression();
     renderProgression();
 }
 
 function removeChord(index) {
-    if (isPlaying) stop();
+    if (playbackArmed) stop();   // also covers the count-in, before isPlaying is set
     progression.splice(index, 1);
     selectedSet.delete(index);
     // Remap selected indices that shifted down
@@ -538,6 +608,10 @@ function removeChord(index) {
 
 function duplicateChord(index) {
     progression.splice(index + 1, 0, { ...progression[index] });
+    // Selected indices after the insertion point shift up by one
+    const rebuilt = new Set();
+    selectedSet.forEach(i => rebuilt.add(i > index ? i + 1 : i));
+    selectedSet = rebuilt;
     saveProgression();
     renderProgression();
 }
@@ -566,7 +640,7 @@ function clearSelection() {
 
 function clearAll() {
     if (!confirm('Clear the whole progression?')) return;
-    if (isPlaying) stop();
+    if (playbackArmed) stop();
     progression = [];
     selectedSet.clear();
     saveProgression();
@@ -643,7 +717,7 @@ function highlightDrumStep(step) {
 
 // ── Progression rendering ─────────────────────────────────────────────────────
 
-// Group chords into rows where each row totals at most beatsPerLine beats.
+// Group chords into rows where each row totals at most `limit` beats.
 // A chord too long to fit the remaining space starts the next row.
 function groupByLine(chords, limit) {
     const lines = [];
@@ -692,28 +766,36 @@ function renderProgression() {
             const label = chordLabel(chord.root, chord.type);
             const beats = chord.beats;
 
+            const meta = [];
+            if (chord.inversion) meta.push(['1st', '2nd', '3rd'][Math.min(chord.inversion, 3) - 1] + ' inv');
+            if (chord.octave)    meta.push(chord.octave > 0 ? '+1 oct' : '−1 oct');
+
             const card = document.createElement('div');
             card.className = 'chord-card'
                 + (selectedSet.has(i) ? ' selected' : '');
 
             card.innerHTML = `
                 <div class="chord-name">${label}</div>
+                ${meta.length ? `<div class="chord-meta">${meta.join(' · ')}</div>` : ''}
                 <div class="chord-beat-label">${beats} beat${beats !== 1 ? 's' : ''}</div>
                 <div class="card-actions">
-                    <button class="chord-copy"   title="Duplicate">⧉</button>
-                    <button class="chord-remove" title="Remove">×</button>
+                    <button class="chord-oct-down" title="Octave down">▼</button>
+                    <button class="chord-oct-up"   title="Octave up">▲</button>
+                    <button class="chord-copy"     title="Duplicate">⧉</button>
+                    <button class="chord-remove"   title="Remove">×</button>
                 </div>
             `;
 
             // Click on card body (not action buttons) → toggle selection
             card.addEventListener('click', e => {
-                if (e.target.classList.contains('chord-copy') ||
-                    e.target.classList.contains('chord-remove')) return;
+                if (e.target.closest('button')) return;
                 toggleSelect(i);
             });
 
-            card.querySelector('.chord-copy')  .addEventListener('click', () => duplicateChord(i));
-            card.querySelector('.chord-remove').addEventListener('click', () => removeChord(i));
+            card.querySelector('.chord-oct-down').addEventListener('click', () => shiftOctave(i, -1));
+            card.querySelector('.chord-oct-up')  .addEventListener('click', () => shiftOctave(i, 1));
+            card.querySelector('.chord-copy')    .addEventListener('click', () => duplicateChord(i));
+            card.querySelector('.chord-remove')  .addEventListener('click', () => removeChord(i));
 
             row.appendChild(card);
         });
@@ -722,12 +804,9 @@ function renderProgression() {
     });
 }
 
+// Cards render in progression order, so the nth card is progression[n]
 function highlightChord(index) {
     document.querySelectorAll('.chord-card').forEach((card, i) => {
-        // Map card index back to progression index by reading origIndex from the DOM —
-        // we stored it as a data attribute on the card via the rendered order.
-        // Simpler: just toggle 'active' using the rendered order (cards render in
-        // progression order, so the nth card = progression[n]).
         card.classList.toggle('active', i === index);
     });
 }
@@ -758,6 +837,7 @@ document.addEventListener('DOMContentLoaded', () => {
     progression = loadProgression();
     const saved = loadDrumPattern();
     if (saved) drumPattern = saved;
+    resizeDrumPattern(getDrumSteps());   // saved pattern may not match the default step count
 
     const savedBpm = parseInt(localStorage.getItem('chord-bpm'))
                   || parseInt(localStorage.getItem('metronome-tempo'))
@@ -792,6 +872,16 @@ document.addEventListener('DOMContentLoaded', () => {
         resizeDrumPattern(newSteps);
         renderDrumGrid();
     });
+
+    // Common progressions — populate the select from the data
+    const progSelect = document.getElementById('prog-name');
+    Object.entries(COMMON_PROGRESSIONS).forEach(([key, { label }]) => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = label;
+        progSelect.appendChild(opt);
+    });
+    document.getElementById('add-progression-btn').addEventListener('click', addProgression);
 
     // Chord controls
     document.getElementById('add-chord-btn')          .addEventListener('click', addChord);

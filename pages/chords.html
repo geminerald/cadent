@@ -132,8 +132,45 @@
                                     <option value="8">8</option>
                                 </select>
                             </div>
+                            <div class="chord-adder-field">
+                                <label for="chord-octave">Octave</label>
+                                <select id="chord-octave">
+                                    <option value="-1">Low (−1)</option>
+                                    <option value="0" selected>Mid</option>
+                                    <option value="1">High (+1)</option>
+                                </select>
+                            </div>
+                            <div class="chord-adder-field">
+                                <label for="chord-inversion">Inversion</label>
+                                <select id="chord-inversion">
+                                    <option value="0" selected>Root</option>
+                                    <option value="1">1st</option>
+                                    <option value="2">2nd</option>
+                                    <option value="3">3rd (7ths)</option>
+                                </select>
+                            </div>
                         </div>
                         <button id="add-chord-btn">+ Add Chord</button>
+
+                        <!-- Common progression quick-add -->
+                        <div class="progression-adder">
+                            <div class="chord-adder-field">
+                                <label for="prog-key">Key</label>
+                                <select id="prog-key">
+                                    <option selected>C</option><option>C#</option>
+                                    <option>D</option><option>D#</option>
+                                    <option>E</option><option>F</option>
+                                    <option>F#</option><option>G</option>
+                                    <option>G#</option><option>A</option>
+                                    <option>A#</option><option>B</option>
+                                </select>
+                            </div>
+                            <div class="chord-adder-field">
+                                <label for="prog-name">Common Progression</label>
+                                <select id="prog-name"></select>
+                            </div>
+                            <button id="add-progression-btn" type="button">+ Add Progression</button>
+                        </div>
                     </div>
 
                     <!-- Progression display (rendered by JS) -->

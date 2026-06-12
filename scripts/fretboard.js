@@ -10,6 +10,7 @@ const targetNotes = [
 const state = {
     audioContext: null,
     analyser: null,
+    analysisBuffer: null,   // reused each frame instead of reallocating
     stream: null,
     active: false,
     currentTarget: null,
@@ -19,8 +20,7 @@ const state = {
     startTime: null,
     elapsedTime: 0,
     timerInterval: null,
-    rafId: null,
-    solved: new Set()
+    rafId: null
 };
 
 function noteNameFromIndex(index) {
@@ -155,21 +155,6 @@ function updateTimer() {
     document.getElementById('drill-time').textContent = `Time: ${elapsed.toFixed(2)}s`;
 }
 
-function updateProgress() {
-    const list = document.getElementById('progress-list');
-    if (!list) {
-        return;
-    }
-    list.innerHTML = '';
-    targetNotes.forEach(note => {
-        const item = document.createElement('li');
-        item.textContent = note;
-        item.style.color = state.solved.has(note) ? '#7cff7c' : '#e4f9ff';
-        item.style.opacity = state.solved.has(note) ? '1' : '0.55';
-        list.appendChild(item);
-    });
-}
-
 function setFeedback(text, isSuccess = false) {
     const feedback = document.getElementById('feedback');
     feedback.textContent = text;
@@ -178,7 +163,7 @@ function setFeedback(text, isSuccess = false) {
 
 function processAudio() {
     if (!state.active) return;
-    const buffer = new Float32Array(state.analyser.fftSize);
+    const buffer = state.analysisBuffer;
     state.analyser.getFloatTimeDomainData(buffer);
     const freq = autocorrelate(buffer, state.audioContext.sampleRate);
 
@@ -215,7 +200,8 @@ function processAudio() {
                     if (state.stepIndex >= state.maxSteps) {
                         state.currentTarget = null;
                         markDrillComplete();
-                        const finalTime = ((performance.now() - state.startTime) / 1000).toFixed(2);
+                        // Include time accumulated across earlier pauses
+                        const finalTime = (state.elapsedTime + (performance.now() - state.startTime) / 1000).toFixed(2);
                         stopDrill();
                         setFeedback(`Success! completed in ${finalTime}s`, true);
                         return;
@@ -224,8 +210,8 @@ function processAudio() {
                     state.currentTarget = getNextTarget();
                     updateTarget();
                 } else {
-                    const direction = detectedIndex < targetIndex ? 'higher' : 'lower';
-                    setFeedback(`${detected.name} is too ${direction}. Keep trying for ${target}.`);
+                    const hint = detectedIndex < targetIndex ? 'too low — aim higher' : 'too high — aim lower';
+                    setFeedback(`${detected.name} is ${hint}. Keep trying for ${target}.`);
                 }
             } else {
                 setFeedback(`Listening: detected ${detected.name}.`);
@@ -260,12 +246,20 @@ async function startDrill() {
         const source = state.audioContext.createMediaStreamSource(state.stream);
         state.analyser = state.audioContext.createAnalyser();
         state.analyser.fftSize = 2048;
+        state.analysisBuffer = new Float32Array(state.analyser.fftSize);
         source.connect(state.analyser);
 
         state.active = true;
-        if (!state.drillPlan.length || state.stepIndex === 0) {
+
+        // Fresh plan when starting from scratch or after finishing the last drill.
+        // A paused drill keeps its plan so the current target stays valid.
+        const drillFinished = state.drillPlan.length > 0 && state.stepIndex >= state.drillPlan.length;
+        if (!state.drillPlan.length || drillFinished) {
             state.drillPlan = generateDrillPlan();
             state.stepIndex = 0;
+            state.elapsedTime = 0;
+            state.startTime = null;
+            updateChecklist();
         }
 
         if (!state.startTime) {
@@ -283,7 +277,6 @@ async function startDrill() {
 
         updateTarget();
         updateChecklist();
-        updateProgress();
         setFeedback('Listening... play the target note now.');
 
         document.getElementById('start-drill').disabled = true;
@@ -329,7 +322,6 @@ function stopDrill() {
 
 function resetDrill() {
     stopDrill();
-    state.solved.clear();
     state.stepIndex = 0;
     state.startTime = null;
     state.elapsedTime = 0;
@@ -348,5 +340,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     state.currentTarget = null;
     updateTarget();
-    updateProgress();
 });

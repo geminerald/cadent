@@ -160,8 +160,7 @@
         });
     }
 
-    function updateCurrentItem(segIdx) {
-        const segs = segmentBounds();
+    function updateCurrentItem(segIdx, segs = segmentBounds()) {
         if (segIdx < 0 || !segs[segIdx]) return;
         const item = segs[segIdx].item;
         els.itemText.textContent = item.text;
@@ -209,8 +208,9 @@
     }
 
     function updateBar() {
+        // Runs twice a second — compute the segment list once and reuse it
         const segs  = segmentBounds();
-        const total = totalSeconds();
+        const total = segs.length ? segs[segs.length - 1].end : 0;
 
         els.timer.textContent   = formatTime(elapsed);
         els.elapsed.textContent = formatMinutes(Math.min(elapsed, total));
@@ -238,7 +238,7 @@
                 flash(prevSegment);
             }
             prevSegment = segIdx;
-            updateCurrentItem(segIdx);
+            updateCurrentItem(segIdx, segs);
             maybeAutoSwitch(segs[segIdx].item);
         }
 
@@ -315,6 +315,7 @@
 
     // ── Session lifecycle ─────────────────────────────────────────────────────
     function begin() {
+        stopTicking();   // in case a previous session's timer is still running
         active = true;
         running = false;
         complete = false;

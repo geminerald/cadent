@@ -89,8 +89,6 @@
                     </div>
                     <div class="form-actions">
                         <button type="submit" id="add-item">Add to Plan</button>
-                        <button type="button" id="clear-completed">Clear Completed</button>
-                        <button type="button" id="clear-all">Clear All</button>
                     </div>
                 </form>
 
@@ -105,8 +103,12 @@
                 <section id="practice-list" class="note-cards">
                     <h3>Practice Plan</h3>
                     <div id="practice-items" class="practice-items"></div>
-                    <button type="button" id="start-session" class="start-session-btn">Start Practice Session</button>
-                    <button type="button" id="end-session" class="end-session-btn" style="display: none;">End Session</button>
+                    <div class="plan-actions">
+                        <button type="button" id="start-session" class="start-session-btn">Start Practice Session</button>
+                        <button type="button" id="end-session" class="end-session-btn" style="display: none;">End Session</button>
+                        <button type="button" id="clear-completed">Clear Completed</button>
+                        <button type="button" id="clear-all">Clear All</button>
+                    </div>
                 </section>
             </section>
         </main>

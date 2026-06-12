@@ -743,6 +743,14 @@ button:active {
     flex-wrap: wrap;
 }
 
+/* Start/End/Clear row beneath the plan — full width inside the note-cards grid */
+.plan-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+}
+
 /* Tool-page chip on practice items */
 .item-tool {
     color: #6fd3ff;
@@ -1691,6 +1699,39 @@ button:active {
     letter-spacing: 0.05em;
 }
 
+.chord-meta {
+    font-size: 0.64rem;
+    color: #9ef3c0;
+    letter-spacing: 0.05em;
+    line-height: 1;
+}
+
+/* Common progression quick-add row */
+.progression-adder {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    padding-top: 0.75rem;
+    border-top: 1px dashed rgba(99, 255, 166, 0.2);
+}
+
+.progression-adder select {
+    background: rgba(5, 9, 14, 0.88);
+    color: #c8ffed;
+    border: 1px solid rgba(106, 247, 188, 0.35);
+    border-radius: 7px;
+    padding: 0.5rem 0.65rem;
+    font-size: 0.95rem;
+    min-width: 90px;
+    cursor: pointer;
+}
+
+#add-progression-btn {
+    padding: 0.55rem 1.1rem;
+    font-size: 0.95rem;
+}
+
 /* Playback controls */
 .playback-controls {
     display: flex;
@@ -1842,7 +1883,9 @@ button:active {
 }
 
 .chord-copy,
-.chord-remove {
+.chord-remove,
+.chord-oct-up,
+.chord-oct-down {
     width: 22px;
     height: 22px;
     border-radius: 50%;
@@ -1860,8 +1903,22 @@ button:active {
 }
 
 .chord-card:hover .chord-copy,
-.chord-card:hover .chord-remove {
+.chord-card:hover .chord-remove,
+.chord-card:hover .chord-oct-up,
+.chord-card:hover .chord-oct-down {
     transform: scale(1);
+}
+
+.chord-oct-up,
+.chord-oct-down {
+    font-size: 0.55rem;
+    background: rgba(20, 110, 90, 0.85);
+    border-color: rgba(85, 230, 185, 0.9);
+}
+
+.chord-oct-up:hover,
+.chord-oct-down:hover {
+    background: rgba(30, 150, 120, 1);
 }
 
 .chord-copy {
